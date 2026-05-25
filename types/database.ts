@@ -50,6 +50,14 @@ export type Clinic = {
   owner_email: string | null;
   is_active: boolean;
   created_at: string;
+    about: string | null;
+  address: string | null;
+  website: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  cover_image_url: string | null;
 };
 
 export type Conversation = {

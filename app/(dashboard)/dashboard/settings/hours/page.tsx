@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/db/supabase';
-import ClinicInfoForm from './clinic-info-form';
+import HoursManager from './hours-manager';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ async function getClinic() {
   return data;
 }
 
-export default async function SettingsPage() {
+export default async function HoursPage() {
   const clinic = await getClinic();
 
   if (!clinic) {
@@ -25,25 +25,21 @@ export default async function SettingsPage() {
     <div className="max-w-4xl space-y-6 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold">Тохиргоо</h1>
-        <p className="text-slate-500 mt-1">
-          Танай клиникийн мэдээллийг шинэчилнэ үү
-        </p>
+        <p className="text-slate-500 mt-1">Ажлын цагийн хуваарь</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200">
-        <TabLink href="/dashboard/settings" active>
-          Үндсэн
-        </TabLink>
-        <TabLink href="/dashboard/settings/services">
-          Үйлчилгээ
-        </TabLink>
-        <TabLink href="/dashboard/settings/hours">
+        <TabLink href="/dashboard/settings">Үндсэн</TabLink>
+        <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
+        <TabLink href="/dashboard/settings/hours" active>
           Ажлын цаг
         </TabLink>
       </div>
 
-      <ClinicInfoForm clinic={clinic} />
+      <HoursManager
+        clinicId={clinic.id}
+        initialHours={clinic.business_hours}
+      />
     </div>
   );
 }

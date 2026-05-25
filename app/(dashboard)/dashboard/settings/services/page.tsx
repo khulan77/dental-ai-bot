@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/db/supabase';
-import ClinicInfoForm from './clinic-info-form';
+import ServicesManager from './services-manager';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ async function getClinic() {
   return data;
 }
 
-export default async function SettingsPage() {
+export default async function ServicesPage() {
   const clinic = await getClinic();
 
   if (!clinic) {
@@ -26,24 +26,23 @@ export default async function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold">Тохиргоо</h1>
         <p className="text-slate-500 mt-1">
-          Танай клиникийн мэдээллийг шинэчилнэ үү
+          Үйлчилгээ ба үнийн жагсаалт
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200">
-        <TabLink href="/dashboard/settings" active>
-          Үндсэн
-        </TabLink>
-        <TabLink href="/dashboard/settings/services">
+        <TabLink href="/dashboard/settings">Үндсэн</TabLink>
+        <TabLink href="/dashboard/settings/services" active>
           Үйлчилгээ
         </TabLink>
-        <TabLink href="/dashboard/settings/hours">
-          Ажлын цаг
-        </TabLink>
+        <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
       </div>
 
-      <ClinicInfoForm clinic={clinic} />
+      <ServicesManager
+        clinicId={clinic.id}
+        initialServices={clinic.services ?? []}
+      />
     </div>
   );
 }

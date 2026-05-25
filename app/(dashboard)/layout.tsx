@@ -26,11 +26,12 @@ export default function DashboardLayout({
         </div>
 
         <nav className="space-y-1 flex-1">
-          <NavLink href="/dashboard" icon="📊" label="Хяналт" />
-          <NavLink href="/dashboard/appointments" icon="📅" label="Цаг захиалга" />
-          <NavLink href="/dashboard/conversations" icon="💬" label="Харилцан яриа" />
-          <NavLink href="/dashboard/settings" icon="⚙️" label="Тохиргоо" />
-        </nav>
+  <NavLink href="/dashboard" icon="📊" label="Хяналт" />
+  <NavLink href="/dashboard/calendar" icon="📆" label="Хуанли" />
+  <NavLink href="/dashboard/appointments" icon="📅" label="Цаг захиалга" />
+  <NavLink href="/dashboard/conversations" icon="💬" label="Харилцан яриа" />
+  <NavLink href="/dashboard/settings" icon="⚙️" label="Тохиргоо" />
+</nav>
 
         <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200/60 rounded-xl p-3">
           <div className="flex items-center gap-2 mb-1">
