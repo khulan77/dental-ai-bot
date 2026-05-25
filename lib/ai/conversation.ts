@@ -1,6 +1,7 @@
 
 import { openai, AI_MODEL } from './client';
 import type { Clinic, Message } from '@/types/database';
+import { findCachedReply, cacheReply } from './cache';
 
 export type BookingData = {
   name: string;
