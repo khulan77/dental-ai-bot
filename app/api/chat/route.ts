@@ -1,0 +1,76 @@
+import { NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/db/supabase';
+import { generateReply } from '@/lib/ai/conversation';
+import type { Clinic, Message } from '@/types/database';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { slug, message, history = [] } = body as {
+      slug: string;
+      message: string;
+      history: Message[];
+    };
+
+    if (!slug || !message) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+
+    const supabase = createAdminClient();
+    const { data: clinic, error } = await supabase
+      .from('clinics')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error || !clinic) {
+      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 });
+    }
+
+    const startTime = Date.now();
+    const { reply, booking, source, similarity } = await generateReply(
+      clinic as Clinic,
+      history,
+      message
+    );
+    const duration = Date.now() - startTime;
+
+    if (booking) {
+      let doctorId: string | null = null;
+      if (booking.doctor_name) {
+        const { data: doctor } = await supabase
+          .from('doctors')
+          .select('id')
+          .eq('clinic_id', clinic.id)
+          .ilike('name', `%${booking.doctor_name}%`)
+          .single();
+        doctorId = doctor?.id ?? null;
+      }
+
+      await supabase.from('appointments').insert({
+        clinic_id: clinic.id,
+        doctor_id: doctorId,
+        customer_name: booking.customer_name,
+        customer_phone: booking.customer_phone,
+        service: booking.service,
+        scheduled_at: booking.scheduled_at,
+        status: 'confirmed',
+      });
+    }
+
+    return NextResponse.json({
+      reply,
+      booking,
+      source,
+      similarity,
+      duration_ms: duration,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Chat error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
