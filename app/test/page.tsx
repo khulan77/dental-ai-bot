@@ -250,11 +250,25 @@ export default function TestChatPage() {
                 <p className="text-sm text-emerald-700 mt-0.5">
                   Доорх мэдээллээр захиалга бүртгэгдлээ
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                  <BookingField label="Нэр" value={booking.name} />
-                  <BookingField label="Утас" value={booking.phone} />
+               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <BookingField label="Нэр" value={booking.customer_name} />
+                  <BookingField label="Утас" value={booking.customer_phone} />
                   <BookingField label="Үйлчилгээ" value={booking.service} />
-                  <BookingField label="Огноо" value={`${booking.date} ${booking.time}`} />
+                  <BookingField
+                    label="Огноо"
+                    value={new Date(booking.scheduled_at).toLocaleString('mn-MN', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  />
+                  {booking.doctor_name && (
+                    <div className="col-span-2">
+                      <BookingField label="👨‍⚕️ Эмч" value={booking.doctor_name} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

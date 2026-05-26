@@ -29,11 +29,10 @@ export default async function HoursPage() {
       </div>
 
       <div className="flex gap-1 border-b border-slate-200">
-        <TabLink href="/dashboard/settings">Үндсэн</TabLink>
-        <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
-        <TabLink href="/dashboard/settings/hours" active>
-          Ажлын цаг
-        </TabLink>
+         <TabLink href="/dashboard/settings" active={false}>Үндсэн</TabLink>
+  <TabLink href="/dashboard/settings/services" active={false}>Үйлчилгээ</TabLink>
+  <TabLink href="/dashboard/settings/doctors" active={false}>Эмч нар</TabLink>
+  <TabLink href="/dashboard/settings/hours" active={true}>Ажлын цаг</TabLink>
       </div>
 
       <HoursManager

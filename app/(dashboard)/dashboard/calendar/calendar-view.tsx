@@ -1,20 +1,76 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { DaySchedule, TimeSlot } from '@/lib/booking/slots';
 
-export default function CalendarView({ schedule }: { schedule: DaySchedule[] }) {
+type Doctor = {
+  id: string;
+  name: string;
+  specialty: string | null;
+  custom_hours: any;
+  service_ids: string[];
+};
+
+const DOCTOR_COLORS = [
+  { bg: 'from-blue-500 to-cyan-500', light: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
+  { bg: 'from-purple-500 to-pink-500', light: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
+  { bg: 'from-emerald-500 to-teal-500', light: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300' },
+  { bg: 'from-orange-500 to-amber-500', light: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' },
+  { bg: 'from-rose-500 to-red-500', light: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-300' },
+];
+
+export default function CalendarView({
+  schedule,
+  doctors,
+  selectedDoctorId,
+}: {
+  schedule: DaySchedule[];
+  doctors: Doctor[];
+  selectedDoctorId: string;
+}) {
+  const router = useRouter();
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
   const selectedDay = schedule[selectedDayIdx];
 
+  function handleDoctorChange(doctorId: string) {
+    const params = new URLSearchParams();
+    if (doctorId !== 'all') {
+      params.set('doctor', doctorId);
+    }
+    router.push(`/dashboard/calendar${params.toString() ? `?${params.toString()}` : ''}`);
+  }
+
   return (
     <div className="space-y-6">
+      {/* Doctor selector tabs */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-2 inline-flex gap-1 flex-wrap">
+        <DoctorTab
+          label="🦷 Бүгд"
+          active={selectedDoctorId === 'all'}
+          onClick={() => handleDoctorChange('all')}
+          color={null}
+        />
+        {doctors.map((doctor, idx) => {
+          const color = DOCTOR_COLORS[idx % DOCTOR_COLORS.length];
+          return (
+            <DoctorTab
+              key={doctor.id}
+              label={doctor.name}
+              specialty={doctor.specialty}
+              active={selectedDoctorId === doctor.id}
+              onClick={() => handleDoctorChange(doctor.id)}
+              color={color}
+            />
+          );
+        })}
+      </div>
+
       {/* Day tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {schedule.map((day, idx) => {
           const date = new Date(day.date);
           const dayNum = date.getDate();
-          const monthShort = date.toLocaleDateString('mn-MN', { month: 'short' });
           const isToday = idx === 0;
           const isSelected = idx === selectedDayIdx;
           const availableCount = day.slots.filter(s => s.available).length;
@@ -43,7 +99,7 @@ export default function CalendarView({ schedule }: { schedule: DaySchedule[] }) 
 
       {/* Selected day detail */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6">
-        <div className="flex items-baseline justify-between mb-5">
+        <div className="flex items-baseline justify-between mb-5 flex-wrap gap-2">
           <div>
             <h2 className="text-xl font-bold">
               {new Date(selectedDay.date).toLocaleDateString('mn-MN', {
@@ -56,6 +112,11 @@ export default function CalendarView({ schedule }: { schedule: DaySchedule[] }) 
               <p className="text-sm text-slate-500 mt-1">
                 {selectedDay.slots.filter(s => s.available).length} сул цаг /{' '}
                 {selectedDay.slots.length} нийт слот
+                {selectedDay.doctorName && (
+                  <span className="ml-2 text-blue-600 font-medium">
+                    • 👨‍⚕️ {selectedDay.doctorName}
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -77,7 +138,11 @@ export default function CalendarView({ schedule }: { schedule: DaySchedule[] }) 
         {!selectedDay.isOpen ? (
           <div className="text-center py-16 text-slate-400">
             <p className="text-5xl mb-2">😴</p>
-            <p className="font-medium">Энэ өдөр клиник амарна</p>
+            <p className="font-medium">
+              {selectedDoctorId === 'all'
+                ? 'Энэ өдөр клиник амарна'
+                : `${selectedDay.doctorName ?? 'Эмч'} энэ өдөр амарна`}
+            </p>
           </div>
         ) : selectedDay.slots.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
@@ -101,8 +166,7 @@ export default function CalendarView({ schedule }: { schedule: DaySchedule[] }) 
           <div className="space-y-2">
             {selectedDay.slots
               .filter(s => !s.available)
-              // Уникаль booking-уудыг л харуулах
-              .filter((s, idx, arr) => 
+              .filter((s, idx, arr) =>
                 arr.findIndex(x => x.appointmentId === s.appointmentId) === idx
               )
               .map(slot => (
@@ -124,7 +188,90 @@ export default function CalendarView({ schedule }: { schedule: DaySchedule[] }) 
           </div>
         </div>
       )}
+
+      {/* Doctors summary - зөвхөн "Бүгд" сонгосон үед */}
+      {selectedDoctorId === 'all' && doctors.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h3 className="font-semibold mb-4">👨‍⚕️ Эмч тус бүрийн хуваарь</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {doctors.map((doctor, idx) => {
+              const color = DOCTOR_COLORS[idx % DOCTOR_COLORS.length];
+              return (
+                <button
+                  key={doctor.id}
+                  onClick={() => handleDoctorChange(doctor.id)}
+                  className={`p-4 rounded-xl border-2 transition text-left hover:shadow-md ${color.border} ${color.light}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-full bg-gradient-to-br ${color.bg} flex items-center justify-center text-white font-bold`}
+                    >
+                      {doctor.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-semibold ${color.text}`}>{doctor.name}</p>
+                      {doctor.specialty && (
+                        <p className="text-xs text-slate-600">{doctor.specialty}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-2">
+                    {doctor.custom_hours ? '🕐 Өөрийн хуваарьтай' : '🕐 Клиникийн ажлын цаг'}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function DoctorTab({
+  label,
+  specialty,
+  active,
+  onClick,
+  color,
+}: {
+  label: string;
+  specialty?: string | null;
+  active: boolean;
+  onClick: () => void;
+  color: { bg: string; light: string; text: string } | null;
+}) {
+  if (active && color) {
+    return (
+      <button
+        onClick={onClick}
+        className={`px-4 py-2 rounded-xl bg-gradient-to-r ${color.bg} text-white text-sm font-semibold shadow-sm`}
+      >
+        {label}
+        {specialty && <span className="ml-1 opacity-80 text-xs">({specialty})</span>}
+      </button>
+    );
+  }
+
+  if (active) {
+    return (
+      <button
+        onClick={onClick}
+        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold shadow-sm"
+      >
+        {label}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium transition"
+    >
+      {label}
+      {specialty && <span className="ml-1 opacity-60 text-xs">({specialty})</span>}
+    </button>
   );
 }
 

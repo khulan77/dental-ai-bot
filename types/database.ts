@@ -86,4 +86,19 @@ export type Appointment = {
   google_event_id: string | null;
   notes: string | null;
   created_at: string;
+   doctor_id: string | null; 
+};
+
+export type Doctor = {
+  id: string;
+  clinic_id: string;
+  name: string;
+  specialty: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  custom_hours: BusinessHours | null;  // null бол clinic default
+  service_ids: string[];                // empty array бол бүх үйлчилгээ
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
 };

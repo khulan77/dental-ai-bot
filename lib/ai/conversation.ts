@@ -2,6 +2,7 @@ import { openai, AI_MODEL } from './client';
 import type { Clinic, Message } from '@/types/database';
 import { findCachedReply, cacheReply } from './cache';
 import { getAvailableSlotsForBot } from '@/lib/booking/slots';
+import { createAdminClient } from '@/lib/db/supabase';
 
 export type BookingData = {
   name: string;
@@ -9,6 +10,7 @@ export type BookingData = {
   service: string;
   date: string;
   time: string;
+    doctor_name?: string; 
 };
 
 function buildSystemPrompt(clinic: Clinic): string {
@@ -67,18 +69,27 @@ ${hoursList}
 ХАРИЛЦАХ ХЭВ МАЯГ: ${clinic.bot_personality}
 
 ДҮРМҮҮД:
-1. Үргэлж монгол хэлээр хариул.
-2. Богино, эелдэг хариулт өг (2-3 өгүүлбэр).
-3. Үнэ асуувал шууд хэл, тоог ₮ тэмдэгтэй бич.
-4. Цаг авах хүсэлтэй бол: нэр, утас, үйлчилгээ, өдөр, цаг асуу.
-5. Эмчилгээний нарийн зөвлөгөө битгий өг.
-6. ОГНООГ ӨГӨХ ҮЕД заавал ${todayISO}-аас хойших огноо өг. 2023, 2024 он ХЭРЭГЛЭХГҮЙ!
-7. "Маргааш" гэвэл ${tomorrowISO}, "Нөгөөдөр" гэвэл ${dayAfterISO}.
-8. Цаг захиалах бүх мэдээлэл цуглуулсан бол төгсгөлд:
-[BOOKING]{"name": "...", "phone": "...", "service": "...", "date": "YYYY-MM-DD", "time": "HH:MM"}[/BOOKING]
-9. Тодорхойгүй бол асуу, таамаглах хэрэггүй.
-10. Хаяг, утас, веб сайт, сошиал хаяг асуувал — КЛИНИКИЙН МЭДЭЭЛЭЛ хэсгээс шууд хэл.
-11. "Тухай" асуувал клиникийн ТУХАЙ хэсгийг ашиглан товч танилцуулга өг.`;
+1. Зөвхөн монгол хэлээр хариул
+2. Бот биш гэдгээ үгүйсгэхгүй
+3. Товч (1-3 өгүүлбэр)
+4. Эелдэг найрсаг
+5. Үйлчилгээний үнэ, цагийг л өгсөн мэдээллээс хариул
+6. Үнэгүй санал болгохгүй
+7. Ажлын цагнаас гадуур бол маргааш эсвэл дараагийн ажлын өдөрт санал болго
+8. Цаг захиалга хүсвэл: customer_name, customer_phone, scheduled_at, service-ийг асуу
+9. Цаг захиалга бүрэн бэлэн болсон бол хариултын төгсгөлд [BOOKING]...[/BOOKING] tag-аар JSON оруул
+10. Цаг сонгоход ӨГСӨН СУЛ ЦАГУУДААС л санал болго (өөр цаг бодож болохгүй)
+11. Эмчийн талаар асуувал ӨГСӨН ЭМЧ НАРЫН МЭДЭЭЛЛЭЭС л хариул
+12. Захиалга авахдаа аль эмчид зориулсныг асуу. Customer тодорхой эмчийг сонгоогүй бол хамгийн сул байгаа эмчийг санал болго
+13. [BOOKING] tag-д doctor_name field оруул
+[BOOKING] format:
+{
+  "customer_name": "...",
+  "customer_phone": "...",
+  "scheduled_at": "2026-MM-DDTHH:MM:00+08:00",
+  "service": "...",
+  "doctor_name": "..."
+}`;
 }
 
 export async function generateReply(
@@ -95,7 +106,7 @@ export async function generateReply(
 
   if (isFirstMessage) {
     const cached = await findCachedReply(clinic.id, userMessage);
-    
+
     if (cached) {
       console.log(`✨ Cache hit (${cached.source})`, cached.similarity ?? '');
       return {
@@ -106,10 +117,41 @@ export async function generateReply(
     }
   }
 
-  // ШИНЭ: Сул цагуудыг авах (хэрэв хэрэглэгч цагтай холбоотой асуувал)
+  // Цагтай холбоотой асуулт уу?
   const askingAboutTime = /цаг|маргааш|өчигдөр|өнөөдөр|нөгөөдөр|сул|захиал|book/i.test(userMessage);
-  
+
+  // Эмчийг дурдаж байна уу?
+  const mentioningDoctor = /эмч|доктор|анү|бат|сараа|ану/i.test(userMessage);
+
   let availableSlotsInfo = '';
+  let doctorsInfo = '';
+
+  // Эмч нарын мэдээлэл (бүх ярианд ашиглах)
+  const supabase = createAdminClient();
+  const { data: doctors } = await supabase
+    .from('doctors')
+    .select('id, name, specialty, service_ids, custom_hours')
+    .eq('clinic_id', clinic.id)
+    .eq('is_active', true)
+    .order('display_order');
+
+  if (doctors && doctors.length > 0) {
+    const services = (clinic.services ?? []) as Array<{ id: string; name: string }>;
+
+    doctorsInfo = '\n\nЭМНЭЛГИЙН ЭМЧ НАР:\n';
+    doctors.forEach(d => {
+      const serviceIds = (d.service_ids ?? []) as string[];
+      const serviceNames =
+        serviceIds.length === 0
+          ? 'бүх үйлчилгээ'
+          : serviceIds.map(id => services.find(s => s.id === id)?.name).filter(Boolean).join(', ');
+
+      const hours = d.custom_hours ? 'өөрийн хуваарьтай' : 'клиникийн ажлын цагтай';
+      doctorsInfo += `  • ${d.name}${d.specialty ? ` (${d.specialty})` : ''} — Хийдэг: ${serviceNames}. ${hours}\n`;
+    });
+  }
+
+  // Цагтай холбоотой бол сул цагуудыг авах
   if (askingAboutTime) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -124,17 +166,14 @@ export async function generateReply(
       getAvailableSlotsForBot(clinic.id, day3),
     ]);
 
-    availableSlotsInfo = `\n\nДАРААГИЙН 3 ӨДРИЙН СУЛ ЦАГУУД:\n${tomSlots}\n${dayAfterSlots}\n${day3Slots}\n\nҮүнээс гадуур огт цаг санал болгож БОЛОХГҮЙ!`;
+    availableSlotsInfo = `\n\nДАРААГИЙН 3 ӨДРИЙН СУЛ ЦАГУУД (эмч тус бүрээр):\n${tomSlots}\n\n${dayAfterSlots}\n\n${day3Slots}\n\nЗөвхөн эдгээр цагуудаас санал болго! Эмчийн нэрийг заавал дурд.`;
   }
 
-  const systemPrompt = buildSystemPrompt(clinic) + availableSlotsInfo;
+  const systemPrompt = buildSystemPrompt(clinic) + doctorsInfo + availableSlotsInfo;
 
   const messages = [
     { role: 'system' as const, content: systemPrompt },
-    ...history.map(m => ({
-      role: m.role,
-      content: m.content,
-    })),
+    ...history.map(m => ({ role: m.role, content: m.content })),
     { role: 'user' as const, content: userMessage },
   ];
 
@@ -142,15 +181,15 @@ export async function generateReply(
     model: AI_MODEL,
     messages,
     temperature: 0.7,
-    max_tokens: 300,
+    max_tokens: 400,
   });
 
   const fullReply = response.choices[0]?.message?.content ?? 'Уучлаарай, дахин оролдоно уу.';
   const booking = extractBooking(fullReply);
   const cleanReply = fullReply.replace(/\[BOOKING\][\s\S]*?\[\/BOOKING\]/, '').trim();
 
-  // Цагтай холбоотой асуултын хариуг cache хийхгүй (огноо өөрчлөгддөг)
-  if (isFirstMessage && !booking && !askingAboutTime) {
+  // Цаг/эмчтэй холбоотой биш бол cache хийх
+  if (isFirstMessage && !booking && !askingAboutTime && !mentioningDoctor) {
     void cacheReply(clinic.id, userMessage, cleanReply);
   }
 
@@ -162,12 +201,26 @@ function extractBooking(text: string): BookingData | undefined {
   if (!match) return undefined;
 
   try {
-    const parsed = JSON.parse(match[1]);
-    if (parsed.name && parsed.phone && parsed.service && parsed.date && parsed.time) {
-      return parsed as BookingData;
+    const parsed = JSON.parse(match[1].trim());
+    
+    // Бүх шаардлагатай field байгаа эсэхийг шалгах
+    if (
+      !parsed.customer_name ||
+      !parsed.customer_phone ||
+      !parsed.scheduled_at ||
+      !parsed.service
+    ) {
+      return undefined;
     }
+
+    return {
+      customer_name: parsed.customer_name,
+      customer_phone: parsed.customer_phone,
+      scheduled_at: parsed.scheduled_at,
+      service: parsed.service,
+      doctor_name: parsed.doctor_name,
+    };
   } catch {
     return undefined;
   }
-  return undefined;
 }

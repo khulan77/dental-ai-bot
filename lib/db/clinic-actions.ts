@@ -239,3 +239,132 @@ export async function updateBusinessHours(
     };
   }
 }
+
+
+import type { Doctor } from '@/types/database';
+
+export type DoctorInput = {
+  name: string;
+  specialty?: string;
+  bio?: string;
+  service_ids?: string[];
+  custom_hours?: BusinessHoursData | null;
+};
+
+/**
+ * Эмч нэмэх
+ */
+export async function addDoctor(
+  clinicId: string,
+  data: DoctorInput
+): Promise<{ success: boolean; error?: string; doctor?: Doctor }> {
+  try {
+    const supabase = createAdminClient();
+
+    // Display order авах (одоогийн доктор тоо + 1)
+    const { count } = await supabase
+      .from('doctors')
+      .select('id', { count: 'exact', head: true })
+      .eq('clinic_id', clinicId);
+
+    const { data: doctor, error } = await supabase
+      .from('doctors')
+      .insert({
+        clinic_id: clinicId,
+        name: data.name,
+        specialty: data.specialty ?? null,
+        bio: data.bio ?? null,
+        service_ids: data.service_ids ?? [],
+        custom_hours: data.custom_hours ?? null,
+        display_order: (count ?? 0) + 1,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await supabase.from('response_cache').delete().eq('clinic_id', clinicId);
+
+    revalidatePath('/dashboard/settings/doctors');
+    revalidatePath('/dashboard');
+
+    return { success: true, doctor: doctor as Doctor };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Эмч засах
+ */
+export async function updateDoctor(
+  clinicId: string,
+  doctorId: string,
+  data: Partial<DoctorInput>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createAdminClient();
+
+    const updates: Record<string, unknown> = {};
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.specialty !== undefined) updates.specialty = data.specialty;
+    if (data.bio !== undefined) updates.bio = data.bio;
+    if (data.service_ids !== undefined) updates.service_ids = data.service_ids;
+    if (data.custom_hours !== undefined) updates.custom_hours = data.custom_hours;
+
+    const { error } = await supabase
+      .from('doctors')
+      .update(updates)
+      .eq('id', doctorId)
+      .eq('clinic_id', clinicId);
+
+    if (error) throw error;
+
+    await supabase.from('response_cache').delete().eq('clinic_id', clinicId);
+
+    revalidatePath('/dashboard/settings/doctors');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Эмч устгах
+ */
+export async function deleteDoctor(
+  clinicId: string,
+  doctorId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createAdminClient();
+
+    const { error } = await supabase
+      .from('doctors')
+      .delete()
+      .eq('id', doctorId)
+      .eq('clinic_id', clinicId);
+
+    if (error) throw error;
+
+    await supabase.from('response_cache').delete().eq('clinic_id', clinicId);
+
+    revalidatePath('/dashboard/settings/doctors');
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}

@@ -38,13 +38,25 @@ export async function POST(request: Request) {
     const duration = Date.now() - startTime;
 
     if (booking) {
-      const scheduledAt = new Date(`${booking.date}T${booking.time}:00+08:00`);
+      // doctor_id-г олох (Bot нэрээр өгсөн бол)
+      let doctorId: string | null = null;
+      if (booking.doctor_name) {
+        const { data: doctor } = await supabase
+          .from('doctors')
+          .select('id')
+          .eq('clinic_id', clinic.id)
+          .ilike('name', `%${booking.doctor_name}%`)
+          .single();
+        doctorId = doctor?.id ?? null;
+      }
+
       await supabase.from('appointments').insert({
         clinic_id: clinic.id,
-        customer_name: booking.name,
-        customer_phone: booking.phone,
+        doctor_id: doctorId,
+        customer_name: booking.customer_name,
+        customer_phone: booking.customer_phone,
         service: booking.service,
-        scheduled_at: scheduledAt.toISOString(),
+        scheduled_at: booking.scheduled_at,
         status: 'confirmed',
       });
     }
