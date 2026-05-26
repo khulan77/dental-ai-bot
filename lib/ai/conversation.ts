@@ -5,12 +5,12 @@ import { getAvailableSlotsForBot } from '@/lib/booking/slots';
 import { createAdminClient } from '@/lib/db/supabase';
 
 export type BookingData = {
-  name: string;
-  phone: string;
+
   service: string;
-  date: string;
-  time: string;
-    doctor_name?: string; 
+  doctor_name?: string;
+  customer_name: string;
+  customer_phone: string;
+  scheduled_at: string;
 };
 
 function buildSystemPrompt(clinic: Clinic): string {
