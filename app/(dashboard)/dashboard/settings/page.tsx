@@ -1,22 +1,12 @@
-import { createAdminClient } from '@/lib/db/supabase';
 import ClinicInfoForm from './clinic-info-form';
 import Link from 'next/link';
 import { PublicUrlCard } from './public-url-card';
+import { getCurrentClinic } from '@/lib/db/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
-async function getClinic() {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from('clinics')
-    .select('*')
-    .eq('slug', 'sain-shud')
-    .single();
-  return data;
-}
-
 export default async function SettingsPage() {
-  const clinic = await getClinic();
+  const clinic = await getCurrentClinic();
 
   if (!clinic) {
     return <div>Клиник олдсонгүй</div>;
@@ -32,7 +22,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Public URL Card */}
-     <PublicUrlCard clinicId={clinic.id} slug={clinic.slug} />
+      <PublicUrlCard clinicId={clinic.id} slug={clinic.slug} />
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
