@@ -111,9 +111,7 @@ export default function ClinicChat({ clinic }: { clinic: Clinic }) {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="text-5xl mb-3">👋</div>
-                <p className="text-slate-700 font-medium">
-                  Сайн байна уу!
-                </p>
+                <p className="text-slate-700 font-medium">Сайн байна уу!</p>
                 <p className="text-sm text-slate-500 mt-1 mb-6">
                   {clinic.name}-ийн AI ассистент танд туслахад бэлэн
                 </p>
