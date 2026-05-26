@@ -368,3 +368,65 @@ export async function deleteDoctor(
     };
   }
 }
+
+/**
+ * Clinic-ийн slug өөрчлөх
+ */
+export async function updateClinicSlug(
+  clinicId: string,
+  newSlug: string
+): Promise<{ success: boolean; error?: string; slug?: string }> {
+  try {
+    const supabase = createAdminClient();
+
+    const cleanSlug = newSlug.toLowerCase().trim();
+
+    // Validation
+    if (cleanSlug.length < 3 || cleanSlug.length > 30) {
+      return { success: false, error: '3-30 тэмдэгт байх ёстой' };
+    }
+
+    if (!/^[a-z0-9-]+$/.test(cleanSlug)) {
+      return { success: false, error: 'Зөвхөн англи жижиг үсэг, тоо, зураас (-)' };
+    }
+
+    if (cleanSlug.startsWith('-') || cleanSlug.endsWith('-')) {
+      return { success: false, error: 'Зураас эхэнд эсвэл төгсгөлд байж болохгүй' };
+    }
+
+    const RESERVED = ['admin', 'api', 'dashboard', 'login', 'signup', 'test', 'c', 'auth', 'settings'];
+    if (RESERVED.includes(cleanSlug)) {
+      return { success: false, error: 'Энэ нэр ашиглах боломжгүй' };
+    }
+
+    // Давхцал шалгах
+    const { data: existing } = await supabase
+      .from('clinics')
+      .select('id')
+      .eq('slug', cleanSlug)
+      .neq('id', clinicId)
+      .maybeSingle();
+
+    if (existing) {
+      return { success: false, error: 'Энэ URL аль хэдийн ашиглагдсан байна' };
+    }
+
+    // Update
+    const { error } = await supabase
+      .from('clinics')
+      .update({ slug: cleanSlug })
+      .eq('id', clinicId);
+
+    if (error) throw error;
+
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard');
+
+    return { success: true, slug: cleanSlug };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}

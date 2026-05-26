@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserSupabase } from '@/lib/db/supabase-browser';
@@ -11,7 +11,64 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Form fields
+  const [clinicName, setClinicName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<{
+    checking: boolean;
+    available: boolean | null;
+    error: string | null;
+  }>({ checking: false, available: null, error: null });
+
+  // Auto-generate slug from clinic name
+  useEffect(() => {
+    if (slugManuallyEdited) return;
+    
+    const autoSlug = clinicName
+      .toLowerCase()
+      .replace(/ү/g, 'u')
+      .replace(/ө/g, 'o')
+      .replace(/[а-я]/g, '') // Cyrillic-ийг хасна
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 30);
+    
+    setSlug(autoSlug);
+  }, [clinicName, slugManuallyEdited]);
+
+  // Slug availability check (debounced)
+  useEffect(() => {
+    if (!slug || slug.length < 3) {
+      setSlugStatus({ checking: false, available: null, error: null });
+      return;
+    }
+
+    setSlugStatus({ checking: true, available: null, error: null });
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/check-slug', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug }),
+        });
+
+        const data = await res.json();
+        setSlugStatus({
+          checking: false,
+          available: data.available,
+          error: data.error ?? null,
+        });
+      } catch {
+        setSlugStatus({ checking: false, available: false, error: 'Шалгахад алдаа гарлаа' });
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [slug]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -19,7 +76,12 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const clinicName = formData.get('clinic_name') as string;
+
+    if (!slugStatus.available) {
+      setError('URL шалгагдаагүй эсвэл боломжгүй байна');
+      setLoading(false);
+      return;
+    }
 
     const supabase = createBrowserSupabase();
 
@@ -29,28 +91,19 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
       password,
     });
 
-    // Илүү тодорхой алдаа гаргах
     if (signUpError) {
-      console.error('Signup error:', signUpError);
-      setError(`${signUpError.message} (code: ${signUpError.code ?? 'unknown'})`);
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
 
     if (!signUpData.user) {
-      console.error('No user returned. Session:', signUpData.session);
-      setError('User үүссэнгүй. Email confirmation идэвхтэй байж магадгүй. Supabase Dashboard → Auth → Providers → Email → "Confirm email" арилгана уу.');
+      setError('Бүртгэл амжилтгүй. Email confirmation идэвхтэй байж магадгүй.');
       setLoading(false);
       return;
     }
 
     // 2. Шинэ клиник үүсгэх
-    const slug = clinicName
-      .toLowerCase()
-      .replace(/[^a-zа-я0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 50) + '-' + signUpData.user.id.slice(0, 8);
-
     const response = await fetch('/api/setup-clinic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,7 +117,6 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Setup clinic failed:', errorData);
       setError(errorData.error ?? 'Клиник үүсгэхэд алдаа гарлаа');
       setLoading(false);
       return;
@@ -104,19 +156,80 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Clinic name */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             Клиникийн нэр
           </label>
           <input
             type="text"
-            name="clinic_name"
+            value={clinicName}
+            onChange={e => setClinicName(e.target.value)}
             required
             placeholder="Жнь: Сайн шүд эмнэлэг"
             className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
+        {/* Slug / URL */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            Танай URL
+            <span className="text-xs text-slate-400 font-normal ml-2">
+              (Үйлчлүүлэгчдэд илгээх линк)
+            </span>
+          </label>
+          <div className="flex items-center gap-1 px-3 py-2.5 rounded-lg border border-slate-200 focus-within:ring-2 focus-within:ring-blue-500 bg-white text-sm">
+            <span className="text-slate-400 select-none">dental-ai/c/</span>
+            <input
+              type="text"
+              value={slug}
+              onChange={e => {
+                setSlugManuallyEdited(true);
+                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+              }}
+              required
+              minLength={3}
+              maxLength={30}
+              placeholder="my-clinic"
+              className="flex-1 outline-none bg-transparent text-slate-900 font-mono"
+            />
+            {slugStatus.checking && (
+              <div className="w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin" />
+            )}
+            {!slugStatus.checking && slugStatus.available === true && (
+              <span className="text-emerald-500 text-base">✓</span>
+            )}
+            {!slugStatus.checking && slugStatus.available === false && (
+              <span className="text-red-500 text-base">✗</span>
+            )}
+          </div>
+          
+          {/* Status message */}
+          {slug && (
+            <div className="mt-1.5">
+              {slugStatus.checking && (
+                <p className="text-xs text-slate-500">Шалгаж байна...</p>
+              )}
+              {!slugStatus.checking && slugStatus.available === true && (
+                <p className="text-xs text-emerald-600">
+                  ✓ Боломжтой! Танай линк: <span className="font-mono font-medium">dental-ai-bot-green.vercel.app/c/{slug}</span>
+                </p>
+              )}
+              {!slugStatus.checking && slugStatus.available === false && slugStatus.error && (
+                <p className="text-xs text-red-600">⚠️ {slugStatus.error}</p>
+              )}
+            </div>
+          )}
+
+          {!slug && (
+            <p className="text-xs text-slate-400 mt-1.5">
+              💡 Жнь: my-clinic, dental-care, smile-clinic
+            </p>
+          )}
+        </div>
+
+        {/* Email */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             Имэйл
@@ -130,6 +243,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
           />
         </div>
 
+        {/* Password */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             Нууц үг
@@ -152,8 +266,8 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-medium hover:shadow-md disabled:opacity-50 transition-all"
+          disabled={loading || !slugStatus.available}
+          className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-medium hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {loading ? 'Бүртгэж байна...' : 'Бүртгүүлэх'}
         </button>

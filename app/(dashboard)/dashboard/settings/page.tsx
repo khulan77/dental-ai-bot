@@ -32,7 +32,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Public URL Card */}
-      <PublicUrlCard slug={clinic.slug} />
+     <PublicUrlCard clinicId={clinic.id} slug={clinic.slug} />
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
