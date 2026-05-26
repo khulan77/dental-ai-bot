@@ -51,12 +51,12 @@ export async function POST(request: Request) {
       }
 
       await supabase.from('appointments').insert({
-        clinic_id: clinic.id,
-        doctor_id: doctorId,
-        customer_name: booking.customer_name,
-        customer_phone: booking.customer_phone,
-        service: booking.service,
-        scheduled_at: booking.scheduled_at,
+       clinic_id: clinic.id,
+doctor_id: doctorId,
+customer_name: (booking as any).customer_name,   // <-- as any нэмэв
+customer_phone: (booking as any).customer_phone, // <-- as any нэмэв
+service: (booking as any).service,               // <-- as any нэмэв
+scheduled_at: (booking as any).scheduled_at,
         status: 'confirmed',
       });
     }
