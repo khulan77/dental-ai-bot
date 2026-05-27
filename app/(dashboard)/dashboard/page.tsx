@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/db/supabase';
+
 import {
   getDashboardStats,
   getWeeklyTrend,
@@ -7,12 +7,14 @@ import {
   getRecentActivity,
   getDoctorStats,
 } from '@/lib/dashboard/stats';
-import { getCurrentClinic } from '@/lib/db/supabase-server';
+import { getOnboardingProgress } from '@/lib/dashboard/onboarding';
 import WeeklyChart from './weekly-chart';
 import TopCustomersList from './top-customers';
 import CacheStatsCard from './cache-stats';
 import ActivityFeed from './activity-feed';
 import DoctorStats from './doctor-stats';
+import OnboardingChecklist from './onboarding-checklist';
+import { getCurrentClinic, getCurrentUser } from '@/lib/db/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,9 +24,33 @@ async function getClinic() {
 
 export default async function DashboardPage() {
   const clinic = await getClinic();
-  if (!clinic) return <div>Клиник олдсонгүй</div>;
+  const user = await getCurrentUser();
+  if (!clinic || !user) return <div>Клиник олдсонгүй</div>;
 
-  // Бүх дата параллел татах
+
+  // Onboarding шалгах
+  const onboarding = await getOnboardingProgress(clinic.id);
+
+    if (onboarding.isComplete) {
+    // 100% болсон → жинхэнэ dashboard
+    // (доорхи stats код шууд явна)
+  }
+
+  // Хэрэв onboarding дуусаагүй бол checklist харуулна
+  if (!onboarding.isComplete) {
+    return (
+      <OnboardingChecklist
+        steps={onboarding.steps}
+        progress={onboarding.progress}
+        completedCount={onboarding.completedCount}
+        totalCount={onboarding.totalCount}
+        userEmail={user.email ?? ''}
+        clinicName={clinic.name}
+      />
+    );
+  }
+
+  // Бүгд дууссан бол жинхэнэ dashboard харуулна
   const [stats, weeklyTrend, topCustomers, cacheStats, activity, doctorStats] =
     await Promise.all([
       getDashboardStats(clinic.id),
@@ -39,6 +65,8 @@ export default async function DashboardPage() {
   const greeting = getGreeting(now.getHours());
   const todayChange = stats.todayCount - stats.yesterdayCount;
   const weekChange = stats.weekCount - stats.lastWeekCount;
+
+
 
   return (
     <div className="max-w-7xl space-y-6 animate-in fade-in duration-500">

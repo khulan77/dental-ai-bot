@@ -1,17 +1,11 @@
-import { createAdminClient } from '@/lib/db/supabase';
+import { getCurrentClinic } from '@/lib/db/supabase-server';
 import ServicesManager from './services-manager';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 async function getClinic() {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from('clinics')
-    .select('*')
-    .eq('slug', 'sain-shud')
-    .single();
-  return data;
+  return await getCurrentClinic();
 }
 
 export default async function ServicesPage() {
@@ -31,11 +25,12 @@ export default async function ServicesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200">
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         <TabLink href="/dashboard/settings">Үндсэн</TabLink>
         <TabLink href="/dashboard/settings/services" active>
           Үйлчилгээ
         </TabLink>
+        <TabLink href="/dashboard/settings/doctors">Эмч нар</TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
       </div>
 
@@ -59,7 +54,7 @@ function TabLink({
   return (
     <Link
       href={href}
-      className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+      className={`px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
         active
           ? 'border-blue-600 text-blue-600'
           : 'border-transparent text-slate-600 hover:text-slate-900'

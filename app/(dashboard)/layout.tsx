@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getCurrentUser, getCurrentClinic } from '@/lib/db/supabase-server';
 import { redirect } from 'next/navigation';
 import LogoutButton from './logout-button';
+export const revalidate = 0;  // ← Бүх dashboard page-уудыг үргэлж шинэчлэх
 
 export default async function DashboardLayout({
   children,
@@ -15,6 +16,7 @@ export default async function DashboardLayout({
   }
 
   const clinic = await getCurrentClinic();
+  
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">

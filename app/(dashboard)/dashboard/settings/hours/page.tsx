@@ -1,17 +1,11 @@
-import { createAdminClient } from '@/lib/db/supabase';
+import { getCurrentClinic } from '@/lib/db/supabase-server';
 import HoursManager from './hours-manager';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 async function getClinic() {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from('clinics')
-    .select('*')
-    .eq('slug', 'sain-shud')
-    .single();
-  return data;
+  return await getCurrentClinic();
 }
 
 export default async function HoursPage() {
@@ -28,11 +22,19 @@ export default async function HoursPage() {
         <p className="text-slate-500 mt-1">Ажлын цагийн хуваарь</p>
       </div>
 
-      <div className="flex gap-1 border-b border-slate-200">
-         <TabLink href="/dashboard/settings" active={false}>Үндсэн</TabLink>
-  <TabLink href="/dashboard/settings/services" active={false}>Үйлчилгээ</TabLink>
-  <TabLink href="/dashboard/settings/doctors" active={false}>Эмч нар</TabLink>
-  <TabLink href="/dashboard/settings/hours" active={true}>Ажлын цаг</TabLink>
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
+        <TabLink href="/dashboard/settings" active={false}>
+          Үндсэн
+        </TabLink>
+        <TabLink href="/dashboard/settings/services" active={false}>
+          Үйлчилгээ
+        </TabLink>
+        <TabLink href="/dashboard/settings/doctors" active={false}>
+          Эмч нар
+        </TabLink>
+        <TabLink href="/dashboard/settings/hours" active={true}>
+          Ажлын цаг
+        </TabLink>
       </div>
 
       <HoursManager
@@ -55,7 +57,7 @@ function TabLink({
   return (
     <Link
       href={href}
-      className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+      className={`px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
         active
           ? 'border-blue-600 text-blue-600'
           : 'border-transparent text-slate-600 hover:text-slate-900'

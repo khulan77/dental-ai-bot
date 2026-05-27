@@ -1,17 +1,28 @@
 import { createAdminClient } from '@/lib/db/supabase';
 import { notFound } from 'next/navigation';
-import ClinicChat from './clinic-chat';
+import ClinicLanding from './clinic-landing';
 
 export const dynamic = 'force-dynamic';
 
-async function getClinic(slug: string) {
+async function getData(slug: string) {
   const supabase = createAdminClient();
-  const { data } = await supabase
+  
+  const { data: clinic } = await supabase
     .from('clinics')
-    .select('id, name, slug, bot_personality, services, address, latitude, longitude')
+    .select('*')
     .eq('slug', slug)
     .single();
-  return data;
+
+  if (!clinic) return null;
+
+  const { data: doctors } = await supabase
+    .from('doctors')
+    .select('id, name, specialty, bio, avatar_url')
+    .eq('clinic_id', clinic.id)
+    .eq('is_active', true)
+    .order('display_order');
+
+  return { clinic, doctors: doctors ?? [] };
 }
 
 export async function generateMetadata({
@@ -20,24 +31,24 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const clinic = await getClinic(slug);
+  const data = await getData(slug);
   return {
-    title: clinic ? `${clinic.name} - AI Ассистент` : 'Клиник',
-    description: 'Цаг захиалах, мэдээлэл авах',
+    title: data?.clinic ? `${data.clinic.name} - Цаг захиалах` : 'Клиник',
+    description: data?.clinic?.about ?? 'Шүдний эрүүл мэндийн төв',
   };
 }
 
-export default async function ClinicChatPage({
+export default async function ClinicPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const clinic = await getClinic(slug);
+  const data = await getData(slug);
 
-  if (!clinic) {
+  if (!data) {
     notFound();
   }
 
-  return <ClinicChat clinic={clinic} />;
+  return <ClinicLanding clinic={data.clinic} doctors={data.doctors} />;
 }

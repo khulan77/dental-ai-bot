@@ -1,19 +1,15 @@
 import { createAdminClient } from '@/lib/db/supabase';
+import { getCurrentClinic } from '@/lib/db/supabase-server';
 import DoctorsManager from './doctors-manager';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 async function getData() {
-  const supabase = createAdminClient();
-  const { data: clinic } = await supabase
-    .from('clinics')
-    .select('*')
-    .eq('slug', 'sain-shud')
-    .single();
-
+  const clinic = await getCurrentClinic();
   if (!clinic) return null;
 
+  const supabase = createAdminClient();
   const { data: doctors } = await supabase
     .from('doctors')
     .select('*')
