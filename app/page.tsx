@@ -13,7 +13,7 @@ export default function HomePage() {
         </p>
         <div className="flex gap-4 justify-center pt-4">
           <a
-            href="/api/health"
+            href="/dashboard"
             className="text-sm text-blue-600 hover:underline"
           >
             Health check →
