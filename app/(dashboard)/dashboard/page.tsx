@@ -1,4 +1,3 @@
-
 import {
   getDashboardStats,
   getWeeklyTrend,
@@ -6,17 +5,17 @@ import {
   getCacheStats,
   getRecentActivity,
   getDoctorStats,
-} from '@/lib/dashboard/stats';
-import { getOnboardingProgress } from '@/lib/dashboard/onboarding';
-import WeeklyChart from './weekly-chart';
-import TopCustomersList from './top-customers';
-import CacheStatsCard from './cache-stats';
-import ActivityFeed from './activity-feed';
-import DoctorStats from './doctor-stats';
-import OnboardingChecklist from './onboarding-checklist';
-import { getCurrentClinic, getCurrentUser } from '@/lib/db/supabase-server';
+} from "@/lib/dashboard/stats";
+import { getOnboardingProgress } from "@/lib/dashboard/onboarding";
+import WeeklyChart from "./weekly-chart";
+import TopCustomersList from "./top-customers";
+import CacheStatsCard from "./cache-stats";
+import ActivityFeed from "./activity-feed";
+import DoctorStats from "./doctor-stats";
+import OnboardingChecklist from "./onboarding-checklist";
+import { getCurrentClinic, getCurrentUser } from "@/lib/db/supabase-server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 async function getClinic() {
   return await getCurrentClinic();
@@ -27,16 +26,11 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!clinic || !user) return <div>Клиник олдсонгүй</div>;
 
-
-  // Onboarding шалгах
   const onboarding = await getOnboardingProgress(clinic.id);
 
-    if (onboarding.isComplete) {
-    // 100% болсон → жинхэнэ dashboard
-    // (доорхи stats код шууд явна)
+  if (onboarding.isComplete) {
   }
 
-  // Хэрэв onboarding дуусаагүй бол checklist харуулна
   if (!onboarding.isComplete) {
     return (
       <OnboardingChecklist
@@ -44,7 +38,7 @@ export default async function DashboardPage() {
         progress={onboarding.progress}
         completedCount={onboarding.completedCount}
         totalCount={onboarding.totalCount}
-        userEmail={user.email ?? ''}
+        userEmail={user.email ?? ""}
         clinicName={clinic.name}
       />
     );
@@ -66,8 +60,6 @@ export default async function DashboardPage() {
   const todayChange = stats.todayCount - stats.yesterdayCount;
   const weekChange = stats.weekCount - stats.lastWeekCount;
 
-
-
   return (
     <div className="max-w-7xl space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -83,10 +75,10 @@ export default async function DashboardPage() {
         <div className="text-right">
           <p className="text-sm text-slate-400">Өнөөдөр</p>
           <p className="text-lg font-semibold text-slate-700">
-            {now.toLocaleDateString('mn-MN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
+            {now.toLocaleDateString("mn-MN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </p>
         </div>
@@ -136,10 +128,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Doctor Statistics */}
       <DoctorStats doctors={doctorStats} />
 
-      {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TopCustomersList customers={topCustomers} />
         <ActivityFeed items={activity} />
@@ -149,9 +139,9 @@ export default async function DashboardPage() {
 }
 
 function getGreeting(hour: number): string {
-  if (hour < 12) return 'Өглөөний мэнд!';
-  if (hour < 18) return 'Өдрийн мэнд!';
-  return 'Оройн мэнд!';
+  if (hour < 12) return "Өглөөний мэнд!";
+  if (hour < 18) return "Өдрийн мэнд!";
+  return "Оройн мэнд!";
 }
 
 function StatCard({
@@ -172,10 +162,10 @@ function StatCard({
   iconBg: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
+    <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
       <div className="flex items-start justify-between mb-3">
         <div
-          className={`w-10 h-10 rounded-xl bg-gradient-to-br ${iconBg} flex items-center justify-center text-xl shadow-sm`}
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${iconBg} flex items-center justify-center text-lg sm:text-xl shadow-sm`}
         >
           {icon}
         </div>
@@ -183,18 +173,20 @@ function StatCard({
           <div
             className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
               change > 0
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-red-50 text-red-700'
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
             }`}
           >
-            {change > 0 ? '↑' : '↓'} {Math.abs(change)}
+            {change > 0 ? "↑" : "↓"} {Math.abs(change)}
           </div>
         )}
       </div>
-      <div className="text-2xl font-bold text-slate-900 tracking-tight">
+      <div className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
         {value}
       </div>
-      <div className="text-xs text-slate-500 mt-1 font-medium">{label}</div>
+      <div className="text-xs text-slate-500 mt-1 font-medium leading-snug">
+        {label}
+      </div>
       {subtitle && (
         <div className="text-[10px] text-slate-400 mt-0.5">{subtitle}</div>
       )}
