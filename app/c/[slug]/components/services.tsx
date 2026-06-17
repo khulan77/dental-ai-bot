@@ -1,9 +1,19 @@
 'use client';
 
 import type { Service } from './types';
-import { ArrowRight, Clock, Sparkles } from 'lucide-react';
+import { Clock, ArrowUpRight } from 'lucide-react';
 
 const SERVICE_ICONS = ['🦷', '✨', '💎', '🪥', '😁', '🌟', '🩺', '💉'];
+const SERVICE_COLORS = [
+  'from-blue-50 to-indigo-50 border-blue-100',
+  'from-violet-50 to-purple-50 border-violet-100',
+  'from-emerald-50 to-teal-50 border-emerald-100',
+  'from-amber-50 to-orange-50 border-amber-100',
+  'from-pink-50 to-rose-50 border-pink-100',
+  'from-cyan-50 to-sky-50 border-cyan-100',
+  'from-blue-50 to-indigo-50 border-blue-100',
+  'from-violet-50 to-purple-50 border-violet-100',
+];
 
 export default function Services({
   services,
@@ -15,84 +25,68 @@ export default function Services({
   if (services.length === 0) return null;
 
   return (
-    <section className="relative py-20 sm:py-28 overflow-hidden bg-gradient-to-b from-white via-blue-50/30 to-white">
-      {/* Background glows */}
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-blue-200/20 blur-[120px] rounded-full" />
-      <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-blue-100/30 blur-[120px] rounded-full" />
+    <section
+      className="bg-white py-24 sm:py-32 px-5 sm:px-8"
+      style={{ fontFamily: 'var(--font-jakarta, var(--font-sans))' }}
+    >
+      <div className="max-w-6xl mx-auto">
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8">
-        
-        {/* ═════ HEADER ═════ */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          
-          {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200/60 mb-6">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span className="text-[12px] font-bold text-blue-700 tracking-[0.15em] uppercase">
-              Манай үйлчилгээ
-            </span>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-4xl sm:text-5xl lg:text-5xl font-black tracking-tight text-slate-900 leading-[1.05]">
+        {/* Header */}
+        <div className="text-center max-w-xl mx-auto mb-16 premium-reveal-1">
+          <span className="inline-block text-[12px] font-bold text-blue-600 tracking-[0.2em] uppercase mb-4">
+            — Үйлчилгээнүүд —
+          </span>
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight mb-4">
             Бүх төрлийн{' '}
-            <span className="text-blue-600">эмчилгээ</span>
+            <span className="italic font-light text-blue-600" style={{ fontFamily: 'var(--font-serif)' }}>
+              эмчилгээ
+            </span>
           </h2>
-
-          {/* Subtitle */}
-          <p className="mt-5 text-base sm:text-lg text-slate-500 leading-relaxed">
-            Орчин үеийн технологитой, мэргэжлийн түвшний шүдний эмчилгээний бүх үйлчилгээ
+          <p className="text-[15px] text-slate-500 leading-relaxed">
+            Орчин үеийн тоног төхөөрөмж, мэргэшсэн эмч нарын гараар хийгдэх бүх үйлчилгээ
           </p>
         </div>
 
-        {/* ═════ SERVICES GRID ═════ */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        {/* Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {services.map((service, idx) => (
             <button
               key={service.id}
               onClick={onChatClick}
-              className="group relative text-left bg-white border-2 border-slate-100 hover:border-blue-200 rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-2xl hover:shadow-blue-100/50 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+              className={`group text-left bg-gradient-to-br ${SERVICE_COLORS[idx % SERVICE_COLORS.length]} border rounded-3xl p-6 hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300`}
             >
-              {/* Hover glow effect */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              <div className="relative">
-                {/* Icon */}
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5 group-hover:bg-blue-600 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  <span className="text-2xl group-hover:scale-110 transition-transform">
-                    {SERVICE_ICONS[idx % SERVICE_ICONS.length]}
-                  </span>
+              {/* Icon row */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                  {SERVICE_ICONS[idx % SERVICE_ICONS.length]}
                 </div>
-
-                {/* Title */}
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight mb-2">
-                  {service.name}
-                </h3>
-
-                {/* Duration */}
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-6">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{service.duration_minutes} минут</span>
+                <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  <span className="text-[11px] font-medium text-slate-500">{service.duration_minutes} мин</span>
                 </div>
+              </div>
 
-                {/* Price + Arrow */}
-                <div className="flex items-end justify-between pt-5 border-t border-slate-100">
-                  <div>
-                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">
-                      Үнэ
-                    </div>
-                    <div className="text-2xl font-black text-blue-600">
-                      ₮{service.price_mnt.toLocaleString()}
-                    </div>
+              {/* Name */}
+              <h3 className="text-[16px] font-bold text-slate-900 mb-2 leading-snug">
+                {service.name}
+              </h3>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-4 border-t border-white/60">
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Үнэ</div>
+                  <div className="text-[20px] font-extrabold text-blue-600">
+                    ₮{service.price_mnt.toLocaleString()}
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-blue-600 flex items-center justify-center transition-colors">
-                    <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-                  </div>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                  <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                 </div>
               </div>
             </button>
           ))}
         </div>
+
       </div>
     </section>
   );

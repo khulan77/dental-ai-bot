@@ -17,7 +17,7 @@ async function getData(slug: string) {
 
   const { data: doctors } = await supabase
     .from('doctors')
-    .select('id, name, specialty, bio, avatar_url')
+    .select('id, name, specialty, bio, avatar_url, service_ids')
     .eq('clinic_id', clinic.id)
     .eq('is_active', true)
     .order('display_order');

@@ -51,7 +51,7 @@ function buildSystemPrompt(clinic: Clinic): string {
     (clinic as any).instagram_url && `INSTAGRAM: ${(clinic as any).instagram_url}`,
   ].filter(Boolean).join('\n');
 
-  return `Чи "${clinic.name}"-ийн AI туслах. Зорилго: үйлчлүүлэгчтэй ярилцаж, цаг захиалга авах.
+  return `Чи "${clinic.name}"-ийн AI захиалгын туслах. ГОЛ ЗОРИЛГО: Хэрэглэгчийн цаг захиалгыг бүрэн дуусгах.
 
 ӨНӨӨДРИЙН ОГНОО: ${todayISO}
 МАРГААШ: ${tomorrowISO}
@@ -70,18 +70,19 @@ ${hoursList}
 
 ДҮРМҮҮД:
 1. Зөвхөн монгол хэлээр хариул
-2. Бот биш гэдгээ үгүйсгэхгүй
-3. Товч (1-3 өгүүлбэр)
-4. Эелдэг найрсаг
-5. Үйлчилгээний үнэ, цагийг л өгсөн мэдээллээс хариул
-6. Үнэгүй санал болгохгүй
-7. Ажлын цагнаас гадуур бол маргааш эсвэл дараагийн ажлын өдөрт санал болго
-8. Цаг захиалга хүсвэл: customer_name, customer_phone, scheduled_at, service-ийг асуу
-9. Цаг захиалга бүрэн бэлэн болсон бол хариултын төгсгөлд [BOOKING]...[/BOOKING] tag-аар JSON оруул
-10. Цаг сонгоход ӨГСӨН СУЛ ЦАГУУДААС л санал болго (өөр цаг бодож болохгүй)
-11. Эмчийн талаар асуувал ӨГСӨН ЭМЧ НАРЫН МЭДЭЭЛЛЭЭС л хариул
-12. Захиалга авахдаа аль эмчид зориулсныг асуу. Customer тодорхой эмчийг сонгоогүй бол хамгийн сул байгаа эмчийг санал болго
-13. [BOOKING] tag-д doctor_name field оруул
+2. Товч (1-3 өгүүлбэр), эелдэг найрсаг
+3. Үйлчилгээний үнэ, цагийг л өгсөн мэдээллээс хариул, үнэгүй санал болгохгүй
+4. Цаг сонгоход ӨГСӨН СУЛ ЦАГУУДААС л санал болго (өөр цаг бодож болохгүй)
+5. Эмчийн талаар зөвхөн ӨГСӨН ЭМЧ НАРЫН МЭДЭЭЛЛЭЭС хариул
+
+ЗАХИАЛГЫН ДҮРМҮҮД (заавал дагах):
+6. Хэрэглэгч ямар ч мессеж илгээсэн бай — цаг захиалгын мэдээлэл цуглуулахыг хичээ
+7. Асуулт хариулсны дараа ЗААВАЛ "Цаг захиалъя уу?" гэж санал болго
+8. Захиалгын мэдээлэл дараалан цуглуул: 1) Ямар үйлчилгээ? 2) Аль эмч? 3) Хэзээ? 4) Нэр? 5) Утас?
+9. Customer тодорхой эмч сонгоогүй бол хамгийн сул байгаа эмчийг санал болго
+10. Ажлын цагнаас гадуур бол маргааш эсвэл дараагийн ажлын өдөрт санал болго
+11. Нэр, утас, цаг, үйлчилгээ БҮГД бэлэн болмогц хариултын төгсгөлд [BOOKING]...[/BOOKING] tag оруул
+
 [BOOKING] format:
 {
   "customer_name": "...",
@@ -117,23 +118,25 @@ export async function generateReply(
     }
   }
 
-  // Цагтай холбоотой асуулт уу?
-  const askingAboutTime = /цаг|маргааш|өчигдөр|өнөөдөр|нөгөөдөр|сул|захиал|book/i.test(userMessage);
-
   // Эмчийг дурдаж байна уу?
   const mentioningDoctor = /эмч|доктор|анү|бат|сараа|ану/i.test(userMessage);
 
   let availableSlotsInfo = '';
   let doctorsInfo = '';
 
-  // Эмч нарын мэдээлэл (бүх ярианд ашиглах)
+  // Эмч нарын мэдээлэл болон сул цагуудыг бүх мессежд ачаалах
   const supabase = createAdminClient();
-  const { data: doctors } = await supabase
-    .from('doctors')
-    .select('id, name, specialty, service_ids, custom_hours')
-    .eq('clinic_id', clinic.id)
-    .eq('is_active', true)
-    .order('display_order');
+  const [{ data: doctors }, ...slotResults] = await Promise.all([
+    supabase
+      .from('doctors')
+      .select('id, name, specialty, service_ids, custom_hours')
+      .eq('clinic_id', clinic.id)
+      .eq('is_active', true)
+      .order('display_order'),
+    getAvailableSlotsForBot(clinic.id, (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })()),
+    getAvailableSlotsForBot(clinic.id, (() => { const d = new Date(); d.setDate(d.getDate() + 2); return d; })()),
+    getAvailableSlotsForBot(clinic.id, (() => { const d = new Date(); d.setDate(d.getDate() + 3); return d; })()),
+  ]);
 
   if (doctors && doctors.length > 0) {
     const services = (clinic.services ?? []) as Array<{ id: string; name: string }>;
@@ -151,23 +154,8 @@ export async function generateReply(
     });
   }
 
-  // Цагтай холбоотой бол сул цагуудыг авах
-  if (askingAboutTime) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date();
-    dayAfter.setDate(dayAfter.getDate() + 2);
-    const day3 = new Date();
-    day3.setDate(day3.getDate() + 3);
-
-    const [tomSlots, dayAfterSlots, day3Slots] = await Promise.all([
-      getAvailableSlotsForBot(clinic.id, tomorrow),
-      getAvailableSlotsForBot(clinic.id, dayAfter),
-      getAvailableSlotsForBot(clinic.id, day3),
-    ]);
-
-    availableSlotsInfo = `\n\nДАРААГИЙН 3 ӨДРИЙН СУЛ ЦАГУУД (эмч тус бүрээр):\n${tomSlots}\n\n${dayAfterSlots}\n\n${day3Slots}\n\nЗөвхөн эдгээр цагуудаас санал болго! Эмчийн нэрийг заавал дурд.`;
-  }
+  const [tomSlots, dayAfterSlots, day3Slots] = slotResults;
+  availableSlotsInfo = `\n\nДАРААГИЙН 3 ӨДРИЙН СУЛ ЦАГУУД (эмч тус бүрээр):\n${tomSlots}\n\n${dayAfterSlots}\n\n${day3Slots}\n\nЗөвхөн эдгээр цагуудаас санал болго! Эмчийн нэрийг заавал дурд.`;
 
   const systemPrompt = buildSystemPrompt(clinic) + doctorsInfo + availableSlotsInfo;
 
@@ -188,8 +176,7 @@ export async function generateReply(
   const booking = extractBooking(fullReply);
   const cleanReply = fullReply.replace(/\[BOOKING\][\s\S]*?\[\/BOOKING\]/, '').trim();
 
-  // Цаг/эмчтэй холбоотой биш бол cache хийх
-  if (isFirstMessage && !booking && !askingAboutTime && !mentioningDoctor) {
+  if (isFirstMessage && !booking && !mentioningDoctor) {
     void cacheReply(clinic.id, userMessage, cleanReply);
   }
 

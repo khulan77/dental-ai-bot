@@ -107,11 +107,9 @@ export default function Sidebar({
           </div>
           <div>
             <p className="text-sm font-bold text-slate-900 leading-tight">
-              Dental AI
+            {clinicName}
             </p>
-            <p className="text-[10px] text-slate-500 leading-tight truncate max-w-[140px]">
-              {clinicName}
-            </p>
+          
           </div>
         </Link>
         <button
@@ -144,9 +142,9 @@ export default function Sidebar({
               🦷
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900">Dental AI</p>
+              <p className="text-sm font-bold text-slate-900">{clinicName}</p>
               <p className="text-[10px] text-slate-500 truncate max-w-[140px]">
-                {clinicName}
+             Dental AI
               </p>
             </div>
           </Link>
@@ -170,10 +168,10 @@ export default function Sidebar({
             </div>
             <div className="min-w-0">
               <h1 className="text-base font-bold text-slate-900 leading-tight">
-                Dental AI
+               {clinicName}
               </h1>
               <p className="text-[11px] text-slate-500 leading-tight truncate">
-                {clinicName}
+               Dental AI
               </p>
             </div>
           </Link>

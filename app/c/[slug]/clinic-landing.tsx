@@ -7,7 +7,9 @@ import Hero from './components/hero';
 import Services from './components/services';
 import Doctors from './components/doctors';
 import Contact from './components/contact';
-import Footer from './components/footer';
+import BookingModal from './components/booking-modal';
+import DentalTips from './components/dental-tips';
+
 import type { Clinic, Doctor, Service } from './components/types';
 
 export default function ClinicLanding({
@@ -18,17 +20,24 @@ export default function ClinicLanding({
   doctors: Doctor[];
 }) {
   const [showChat, setShowChat] = useState(false);
+  const [chatMessage, setChatMessage] = useState<string | undefined>();
+  const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
   const services = (clinic.services ?? []) as Service[];
-  const openChat = () => setShowChat(true);
+  const openChat = () => { setChatMessage(undefined); setShowChat(true); };
+  const openChatWithMessage = (msg: string) => { setChatMessage(msg); setShowChat(true); };
+  const scrollToDoctors = () => {
+    document.getElementById('doctors')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="min-h-screen bg-white">
-      <Nav clinic={clinic} onChatClick={openChat} />
+      <Nav clinic={clinic} onBookClick={scrollToDoctors} />
       <Hero clinic={clinic} doctors={doctors} services={services} onChatClick={openChat} />
       <Services services={services} onChatClick={openChat} />
-      <Doctors doctors={doctors} onChatClick={openChat} />
-      <Contact clinic={clinic} onChatClick={openChat} />
-      <Footer clinic={clinic} />
+      <DentalTips onAskQuestion={openChatWithMessage} />
+      <Doctors doctors={doctors} onChatClick={openChat} onBookClick={setBookingDoctor} />
+      <Contact clinic={clinic} onBookClick={scrollToDoctors} onAskQuestion={openChatWithMessage} />
+     
 
       {/* Floating Chat Button */}
       {!showChat && (
@@ -44,6 +53,16 @@ export default function ClinicLanding({
         </button>
       )}
 
+      {/* Booking Modal */}
+      {bookingDoctor && (
+        <BookingModal
+          doctor={bookingDoctor}
+          clinicId={clinic.id}
+          services={services}
+          onClose={() => setBookingDoctor(null)}
+        />
+      )}
+
       {/* Chat Modal */}
       {showChat && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-200">
@@ -55,7 +74,7 @@ export default function ClinicLanding({
             >
               ✕
             </button>
-            <ClinicChat clinic={clinic} />
+            <ClinicChat key={chatMessage ?? '__open__'} clinic={clinic} initialMessage={chatMessage} />
           </div>
         </div>
       )}

@@ -11,6 +11,7 @@ export type Doctor = {
   specialty: string | null;
   bio: string | null;
   avatar_url: string | null;
+  service_ids: string[] | null;
 };
 
 export type Clinic = {
