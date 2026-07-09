@@ -37,6 +37,7 @@ export default async function DoctorsPage() {
           Эмч нар
         </TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
+        <TabLink href="/dashboard/settings/instagram">Instagram</TabLink>
       </div>
 
       <DoctorsManager

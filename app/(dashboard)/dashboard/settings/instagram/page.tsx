@@ -1,43 +1,42 @@
 import { getCurrentClinic } from '@/lib/db/supabase-server';
-import ServicesManager from './services-manager';
+import InstagramForm from './instagram-form';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-async function getClinic() {
-  return await getCurrentClinic();
-}
-
-export default async function ServicesPage() {
-  const clinic = await getClinic();
+export default async function InstagramSettingsPage() {
+  const clinic = await getCurrentClinic();
 
   if (!clinic) {
     return <div>Клиник олдсонгүй</div>;
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+  const webhookUrl = `${appUrl.replace(/\/$/, '')}/api/webhook`;
+
   return (
     <div className="max-w-4xl space-y-6 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold">Тохиргоо</h1>
-        <p className="text-slate-500 mt-1">
-          Үйлчилгээ ба үнийн жагсаалт
-        </p>
+        <p className="text-slate-500 mt-1">Instagram / Messenger бот холболт</p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         <TabLink href="/dashboard/settings">Үндсэн</TabLink>
-        <TabLink href="/dashboard/settings/services" active>
-          Үйлчилгээ
-        </TabLink>
+        <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
         <TabLink href="/dashboard/settings/doctors">Эмч нар</TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
-        <TabLink href="/dashboard/settings/instagram">Instagram</TabLink>
+        <TabLink href="/dashboard/settings/instagram" active>
+          Instagram
+        </TabLink>
       </div>
 
-      <ServicesManager
+      <InstagramForm
         clinicId={clinic.id}
-        initialServices={clinic.services ?? []}
+        pageId={clinic.instagram_page_id ?? null}
+        hasToken={Boolean(clinic.meta_page_access_token)}
+        webhookUrl={webhookUrl}
       />
     </div>
   );

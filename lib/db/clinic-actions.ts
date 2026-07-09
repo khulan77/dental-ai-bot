@@ -14,6 +14,8 @@ export type ClinicUpdateData = {
   instagram_url?: string;
   latitude?: number;
   longitude?: number;
+  instagram_page_id?: string | null;
+  meta_page_access_token?: string | null;
 };
 
 export async function updateClinic(
