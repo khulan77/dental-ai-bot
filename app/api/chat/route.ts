@@ -1,20 +1,29 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
 import { generateReply } from '@/lib/ai/conversation';
-import type { Clinic, Message } from '@/types/database';
+import { chatSchema, firstZodError } from '@/lib/validation';
+import { isSlotAvailable } from '@/lib/booking/slots';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import type { Clinic } from '@/types/database';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { slug, message, history = [] } = body as {
-      slug: string;
-      message: string;
-      history: Message[];
-    };
-
-    if (!slug || !message) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    // Rate limit: нэг IP-аас минутанд 15 хүсэлт (OpenAI зардлаас хамгаална)
+    const ip = getClientIp(request);
+    const allowed = await checkRateLimit(`chat:${ip}`, 15, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу.' },
+        { status: 429 }
+      );
     }
+
+    const body = await request.json();
+    const parsed = chatSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: firstZodError(parsed.error) }, { status: 400 });
+    }
+    const { slug, message, history } = parsed.data;
 
     const supabase = createAdminClient();
     const { data: clinic, error } = await supabase
@@ -28,12 +37,15 @@ export async function POST(request: Request) {
     }
 
     const startTime = Date.now();
-    const { reply, booking, source, similarity } = await generateReply(
+    const { reply: aiReply, booking, source, similarity } = await generateReply(
       clinic as Clinic,
       history,
       message
     );
     const duration = Date.now() - startTime;
+
+    let reply = aiReply;
+    let confirmedBooking = booking;
 
     if (booking) {
       let doctorId: string | null = null;
@@ -47,20 +59,28 @@ export async function POST(request: Request) {
         doctorId = doctor?.id ?? null;
       }
 
-      await supabase.from('appointments').insert({
-        clinic_id: clinic.id,
-        doctor_id: doctorId,
-        customer_name: booking.customer_name,
-        customer_phone: booking.customer_phone,
-        service: booking.service,
-        scheduled_at: booking.scheduled_at,
-        status: 'confirmed',
-      });
+      // Давхар захиалгаас сэргийлэх — цаг сул бол л insert хийнэ
+      const available = await isSlotAvailable(clinic.id, doctorId, booking.scheduled_at);
+      if (available) {
+        await supabase.from('appointments').insert({
+          clinic_id: clinic.id,
+          doctor_id: doctorId,
+          customer_name: booking.customer_name,
+          customer_phone: booking.customer_phone,
+          service: booking.service,
+          scheduled_at: booking.scheduled_at,
+          status: 'confirmed',
+        });
+      } else {
+        reply =
+          'Уучлаарай, энэ цаг аль хэдийн захиалагдсан байна. Өөр цаг сонгоно уу.';
+        confirmedBooking = undefined;
+      }
     }
 
     return NextResponse.json({
       reply,
-      booking,
+      booking: confirmedBooking,
       source,
       similarity,
       duration_ms: duration,

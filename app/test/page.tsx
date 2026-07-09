@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { notFound } from 'next/navigation';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -9,6 +10,11 @@ type ChatMessage = {
 };
 
 export default function TestChatPage() {
+  // Зөвхөн хөгжүүлэлтэд — production дээр нуух
+  if (process.env.NODE_ENV === 'production') {
+    notFound();
+  }
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

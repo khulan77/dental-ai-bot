@@ -30,6 +30,51 @@ const DAY_NAMES_MN = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', '�
 const SLOT_DURATION_MINUTES = 30;
 
 /**
+ * Хүссэн цаг сул эсэхийг шалгах — insert хийхээс өмнө давхар захиалгаас сэргийлнэ.
+ * doctorId өгсөн бол зөвхөн тухайн эмчийн, эс бөгөөс клиникийн бүх захиалгыг шалгана.
+ */
+export async function isSlotAvailable(
+  clinicId: string,
+  doctorId: string | null,
+  scheduledAt: string,
+  durationMinutes: number = SLOT_DURATION_MINUTES
+): Promise<boolean> {
+  const supabase = createAdminClient();
+
+  const start = new Date(scheduledAt);
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+
+  // Тухайн өдрийн боломжит давхцах захиалгуудыг татах
+  const dayStart = new Date(start);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(start);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  let query = supabase
+    .from('appointments')
+    .select('scheduled_at, duration_minutes')
+    .eq('clinic_id', clinicId)
+    .gte('scheduled_at', dayStart.toISOString())
+    .lte('scheduled_at', dayEnd.toISOString())
+    .in('status', ['confirmed', 'reminded']);
+
+  if (doctorId) {
+    query = query.eq('doctor_id', doctorId);
+  }
+
+  const { data: appointments } = await query;
+
+  // Хугацааны давхцал шалгах: (start < aptEnd) && (end > aptStart)
+  return !(appointments ?? []).some((apt) => {
+    const aptStart = new Date(apt.scheduled_at);
+    const aptEnd = new Date(
+      aptStart.getTime() + (apt.duration_minutes ?? SLOT_DURATION_MINUTES) * 60_000
+    );
+    return start < aptEnd && end > aptStart;
+  });
+}
+
+/**
  * Тодорхой эмчийн нэг өдрийн сул цаг
  */
 export async function getDoctorDaySchedule(

@@ -1,20 +1,35 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
+import { bookSchema, firstZodError } from '@/lib/validation';
+import { isSlotAvailable } from '@/lib/booking/slots';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { clinicId, doctorId, customerName, customerPhone, service, scheduledAt } = body as {
-      clinicId: string;
-      doctorId: string;
-      customerName: string;
-      customerPhone: string;
-      service: string;
-      scheduledAt: string;
-    };
+    // Rate limit: нэг IP-аас минутанд 10 захиалга (спам захиалгаас хамгаална)
+    const ip = getClientIp(request);
+    const allowed = await checkRateLimit(`book:${ip}`, 10, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу.' },
+        { status: 429 }
+      );
+    }
 
-    if (!clinicId || !customerName || !customerPhone || !service || !scheduledAt) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    const body = await request.json();
+    const parsed = bookSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: firstZodError(parsed.error) }, { status: 400 });
+    }
+    const { clinicId, doctorId, customerName, customerPhone, service, scheduledAt } = parsed.data;
+
+    // Давхар захиалгаас сэргийлэх — цаг сул эсэхийг шалгах
+    const available = await isSlotAvailable(clinicId, doctorId ?? null, scheduledAt);
+    if (!available) {
+      return NextResponse.json(
+        { error: 'Энэ цаг аль хэдийн захиалагдсан байна. Өөр цаг сонгоно уу.' },
+        { status: 409 }
+      );
     }
 
     const supabase = createAdminClient();
@@ -29,14 +44,13 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Book insert error:', error);
+      return NextResponse.json({ error: 'Захиалга үүсгэж чадсангүй' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    console.error('Book error:', error);
+    return NextResponse.json({ error: 'Серверийн алдаа' }, { status: 500 });
   }
 }

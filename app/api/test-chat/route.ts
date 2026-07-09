@@ -4,6 +4,11 @@ import { generateReply } from '@/lib/ai/conversation';
 import type { Clinic, Message } from '@/types/database';
 
 export async function POST(request: Request) {
+  // Зөвхөн хөгжүүлэлтэд ашиглах debug endpoint — production дээр хаана
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   try {
     const body = await request.json();
     const { message, history = [] } = body as {
