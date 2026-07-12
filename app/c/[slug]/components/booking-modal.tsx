@@ -88,7 +88,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
             <p className="text-sm text-slate-700"><span className="font-medium">Нэр:</span> {customerName}</p>
           </div>
           <p className="text-slate-400 text-xs mb-5">Удахгүй танд холбогдох болно</p>
-          <button onClick={onClose} className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition">
+          <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/30 transition">
             Хаах
           </button>
         </div>
@@ -104,11 +104,12 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
       >
         {/* Header */}
         <div className="flex items-center gap-3 p-5 border-b border-slate-100 flex-shrink-0">
-          <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-500/30">
             {doctor.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900 truncate">{doctor.name}</h3>
+            <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Цаг захиалах</p>
+            <h3 className="font-semibold text-slate-900 truncate leading-tight">{doctor.name}</h3>
             {doctor.specialty && <p className="text-xs text-slate-500">{doctor.specialty}</p>}
           </div>
           <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition flex-shrink-0">
@@ -239,7 +240,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
           <button
             onClick={handleSubmit}
             disabled={loading || !selectedService || !selectedDate || !selectedTime || !customerName.trim() || !customerPhone.trim()}
-            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-sm transition-all shadow-sm hover:shadow-md"
+            className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none text-white rounded-xl font-semibold text-sm transition-all"
           >
             {loading ? 'Захиалж байна...' : 'Цаг захиалах →'}
           </button>
