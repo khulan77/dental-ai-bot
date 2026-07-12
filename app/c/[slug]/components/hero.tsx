@@ -7,12 +7,12 @@ export default function Hero({
   clinic,
   doctors,
   services,
-  onChatClick,
+  onBookClick,
 }: {
   clinic: Clinic;
   doctors: Doctor[];
   services: Service[];
-  onChatClick: () => void;
+  onBookClick: () => void;
 }) {
   const phone = clinic.owner_phone;
 
@@ -65,7 +65,7 @@ export default function Hero({
             {/* CTA buttons */}
             <div className="flex flex-wrap gap-3 mb-12">
               <button
-                onClick={onChatClick}
+                onClick={onBookClick}
                 className="group flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[15px] font-semibold transition-all hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-95"
               >
                 <CalendarDays className="w-5 h-5" />

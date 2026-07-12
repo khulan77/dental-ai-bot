@@ -35,7 +35,7 @@ export default function ClinicLanding({
   return (
     <div className="min-h-screen bg-white">
       <Nav clinic={clinic} onBookClick={scrollToDoctors} />
-      <Hero clinic={clinic} doctors={doctors} services={services} onChatClick={openChat} />
+      <Hero clinic={clinic} doctors={doctors} services={services} onBookClick={scrollToDoctors} />
       <Services services={services} onServiceClick={setPickerService} />
       <DentalTips onAskQuestion={openChatWithMessage} />
       <Doctors doctors={doctors} onChatClick={openChat} onBookClick={setBookingDoctor} />
