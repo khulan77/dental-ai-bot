@@ -36,7 +36,7 @@ export default function Contact({
         <div className="relative max-w-4xl mx-auto">
 
           {/* Main CTA card */}
-          <div className="relative rounded-[2.5rem] bg-gradient-to-br from-blue-500 via-blue-700 to-blue-700 p-10 sm:p-16 overflow-hidden text-center shadow-2xl shadow-blue-500/30">
+          <div className="relative rounded-[2.5rem] bg-gradient-to-br from-blue-400 to-blue-500 p-10 sm:p-16 overflow-hidden text-center shadow-2xl shadow-blue-500/30">
             <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full border border-white/10" />
             <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full border border-white/10" />
             <div className="absolute top-1/2 right-8 -translate-y-1/2 w-80 h-80 rounded-full border border-white/5" />

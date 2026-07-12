@@ -127,7 +127,7 @@ export default function ClinicChat({
     >
 
       {/* ── HEADER ── */}
-      <div className="relative flex-shrink-0 bg-gradient-to-br from-blue-500 via-blue-700 to-blue-600 px-5 py-4 overflow-hidden">
+      <div className="relative flex-shrink-0 bg-gradient-to-br from-blue-400 to-blue-500 px-5 py-4 overflow-hidden">
         {/* Decorative circles */}
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
         <div className="absolute -bottom-6 right-16 w-20 h-20 rounded-full bg-white/5" />
@@ -138,7 +138,7 @@ export default function ClinicChat({
             <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-2xl shadow-inner">
               🦷
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-blue-600" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-blue-500" />
           </div>
 
           {/* Info */}
