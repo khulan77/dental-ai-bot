@@ -47,7 +47,7 @@ export default function ClinicLanding({
           aria-label="Чат нээх"
         >
           <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-30"></div>
-          <div className="relative w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-900/40 hover:scale-110 active:scale-95 transition flex items-center justify-center text-2xl">
+          <div className="relative w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-2xl shadow-blue-900/40 hover:scale-110 active:scale-95 transition flex items-center justify-center text-2xl">
             💬
           </div>
         </button>

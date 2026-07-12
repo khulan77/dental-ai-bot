@@ -69,7 +69,7 @@ export default function Services({
                     ₮{service.price_mnt.toLocaleString()}
                   </div>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
                   <ArrowUpRight className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" />
                 </div>
               </div>

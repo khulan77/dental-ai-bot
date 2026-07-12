@@ -127,7 +127,7 @@ export default function ClinicChat({
     >
 
       {/* ── HEADER ── */}
-      <div className="relative flex-shrink-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-5 py-4 overflow-hidden">
+      <div className="relative flex-shrink-0 bg-gradient-to-br from-blue-500 via-blue-700 to-blue-600 px-5 py-4 overflow-hidden">
         {/* Decorative circles */}
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
         <div className="absolute -bottom-6 right-16 w-20 h-20 rounded-full bg-white/5" />
@@ -138,7 +138,7 @@ export default function ClinicChat({
             <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-2xl shadow-inner">
               🦷
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-blue-700" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-blue-600" />
           </div>
 
           {/* Info */}
@@ -162,7 +162,7 @@ export default function ClinicChat({
           >
             {/* AI avatar */}
             {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[15px] flex-shrink-0 shadow-sm shadow-blue-200">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-[15px] flex-shrink-0 shadow-sm shadow-blue-200">
                 🤖
               </div>
             )}
@@ -172,7 +172,7 @@ export default function ClinicChat({
               <div
                 className={`px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm ${
                   msg.role === 'user'
-                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md'
+                    ? 'bg-gradient-to-br from-blue-400 to-blue-500 text-white rounded-br-md'
                     : 'bg-white text-slate-800 rounded-bl-md border border-slate-100/80'
                 }`}
               >
@@ -192,14 +192,14 @@ export default function ClinicChat({
         {/* Typing indicator */}
         {loading && (
           <div className="flex items-end gap-2.5 animate-in fade-in duration-200">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[15px] flex-shrink-0 shadow-sm shadow-blue-200">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-[15px] flex-shrink-0 shadow-sm shadow-blue-200">
               🤖
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl rounded-bl-md px-4 py-3.5 shadow-sm">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function ClinicChat({
                 <button
                   key={a.msg}
                   onClick={() => sendQuick(a.msg)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 active:scale-95 transition-all shadow-sm"
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 active:scale-95 transition-all shadow-sm"
                 >
                   <span>{a.icon}</span>
                   {a.label}
@@ -256,7 +256,7 @@ export default function ClinicChat({
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim()}
-            className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all hover:shadow-md hover:shadow-blue-500/30 active:scale-90 flex-shrink-0"
+            className="w-9 h-9 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all hover:shadow-md hover:shadow-blue-500/30 active:scale-90 flex-shrink-0"
           >
             <Send className="w-4 h-4 text-white" />
           </button>

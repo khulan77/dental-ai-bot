@@ -24,7 +24,7 @@ export default function Hero({
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-blue-100/50 blur-3xl" />
-        <div className="absolute bottom-0 -left-40 w-[500px] h-[500px] rounded-full bg-indigo-50/60 blur-3xl" />
+        <div className="absolute bottom-0 -left-40 w-[500px] h-[500px] rounded-full bg-sky-50/60 blur-3xl" />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8 pt-28 pb-20 sm:pt-36 sm:pb-28 w-full">
@@ -66,7 +66,7 @@ export default function Hero({
             <div className="flex flex-wrap gap-3 mb-12">
               <button
                 onClick={onChatClick}
-                className="group flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-[15px] font-semibold transition-all hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-95"
+                className="group flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[15px] font-semibold transition-all hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-95"
               >
                 <CalendarDays className="w-5 h-5" />
                 Цаг захиалах
@@ -109,7 +109,7 @@ export default function Hero({
             <div className="relative">
 
               {/* Main card */}
-              <div className="relative rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-blue-800 p-8 shadow-2xl shadow-blue-500/20 overflow-hidden">
+              <div className="relative rounded-[2.5rem] bg-gradient-to-br from-blue-500 to-blue-600 p-8 shadow-2xl shadow-blue-500/20 overflow-hidden">
                 <div className="absolute inset-0 opacity-10">
                   <div className="absolute top-6 right-6 w-40 h-40 rounded-full border-2 border-white" />
                   <div className="absolute bottom-6 left-6 w-24 h-24 rounded-full border border-white" />

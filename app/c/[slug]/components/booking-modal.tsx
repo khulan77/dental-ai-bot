@@ -88,7 +88,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
             <p className="text-sm text-slate-700"><span className="font-medium">Нэр:</span> {customerName}</p>
           </div>
           <p className="text-slate-400 text-xs mb-5">Удахгүй танд холбогдох болно</p>
-          <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/30 transition">
+          <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/30 transition">
             Хаах
           </button>
         </div>
@@ -104,7 +104,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
       >
         {/* Header */}
         <div className="flex items-center gap-3 p-5 border-b border-slate-100 flex-shrink-0">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-500/30">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-500/30">
             {doctor.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
@@ -130,7 +130,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
                   onClick={() => setSelectedService(s)}
                   className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
                     selectedService?.id === s.id
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-blue-400 bg-blue-50'
                       : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'
                   }`}
                 >
@@ -155,7 +155,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
                   onClick={() => setSelectedDate(d.iso)}
                   className={`p-3 rounded-xl border text-center transition-all ${
                     selectedDate === d.iso
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-blue-400 bg-blue-50'
                       : 'border-slate-200 hover:border-blue-300'
                   }`}
                 >
@@ -189,7 +189,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
                     onClick={() => setSelectedTime(t)}
                     className={`py-2.5 rounded-xl border text-sm font-medium transition-all ${
                       selectedTime === t
-                        ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                        ? 'border-blue-400 bg-blue-500 text-white shadow-sm'
                         : 'border-slate-200 text-slate-700 hover:border-blue-400'
                     }`}
                   >
@@ -240,7 +240,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
           <button
             onClick={handleSubmit}
             disabled={loading || !selectedService || !selectedDate || !selectedTime || !customerName.trim() || !customerPhone.trim()}
-            className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none text-white rounded-xl font-semibold text-sm transition-all"
+            className="w-full py-3.5 bg-gradient-to-r from-blue-400 to-blue-500 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none text-white rounded-xl font-semibold text-sm transition-all"
           >
             {loading ? 'Захиалж байна...' : 'Цаг захиалах →'}
           </button>
