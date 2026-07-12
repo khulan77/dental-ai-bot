@@ -8,16 +8,21 @@ type Props = {
   doctor: Doctor;
   clinicId: string;
   services: Service[];
+  initialService?: Service | null;
   onClose: () => void;
 };
 
 const DAY_NAMES = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
 
-export default function BookingModal({ doctor, clinicId, services, onClose }: Props) {
+export default function BookingModal({ doctor, clinicId, services, initialService, onClose }: Props) {
   const doctorServices =
     doctor.service_ids && doctor.service_ids.length > 0
       ? services.filter(s => doctor.service_ids!.includes(s.id))
       : services;
+
+  // Үйлчилгээнээс дамжиж ирсэн бол түүнийг урьдчилан сонгоно
+  const preselected =
+    (initialService && doctorServices.find(s => s.id === initialService.id)) ?? doctorServices[0] ?? null;
 
   const dates = Array.from({ length: 3 }, (_, i) => {
     const d = new Date();
@@ -29,7 +34,7 @@ export default function BookingModal({ doctor, clinicId, services, onClose }: Pr
     };
   });
 
-  const [selectedService, setSelectedService] = useState<Service | null>(doctorServices[0] ?? null);
+  const [selectedService, setSelectedService] = useState<Service | null>(preselected);
   const [selectedDate, setSelectedDate] = useState<string>(dates[1].iso);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [slots, setSlots] = useState<string[]>([]);

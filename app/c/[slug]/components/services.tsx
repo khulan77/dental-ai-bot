@@ -7,10 +7,10 @@ const SERVICE_ICONS = ['🦷', '✨', '💎', '🪥', '😁', '🌟', '🩺', '�
 
 export default function Services({
   services,
-  onChatClick,
+  onServiceClick,
 }: {
   services: Service[];
-  onChatClick: () => void;
+  onServiceClick: (service: Service) => void;
 }) {
   if (services.length === 0) return null;
 
@@ -42,7 +42,7 @@ export default function Services({
           {services.map((service, idx) => (
             <button
               key={service.id}
-              onClick={onChatClick}
+              onClick={() => onServiceClick(service)}
               className="group text-left bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:-translate-y-1.5 hover:shadow-xl hover:border-blue-200 transition-all duration-300"
             >
               {/* Icon row */}
