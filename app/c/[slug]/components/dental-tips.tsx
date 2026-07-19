@@ -21,7 +21,7 @@ const CATEGORIES: Category[] = [
   {
     icon: '🦷',
     title: 'Өдөр тутмын арчилгаа',
-    color: 'text-blue-700',
+    color: 'text-blue-600',
     bg: 'bg-blue-50',
     border: 'border-blue-100',
     questions: [
@@ -159,12 +159,12 @@ export default function DentalTips({
                       className="w-full flex items-center justify-between px-5 py-3.5 bg-white hover:bg-slate-50 text-left group transition-colors"
                     >
                       <div>
-                        <p className="text-[13px] font-semibold text-slate-800 group-hover:text-blue-700 transition-colors leading-snug">
+                        <p className="text-[13px] font-semibold text-slate-800 group-hover:text-blue-600 transition-colors leading-snug">
                           {item.q}
                         </p>
                         <p className="text-[11px] text-slate-400 mt-0.5">{item.preview}</p>
                       </div>
-                      <div className="ml-3 flex-shrink-0 w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-blue-600 flex items-center justify-center transition-colors">
+                      <div className="ml-3 flex-shrink-0 w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-blue-500 flex items-center justify-center transition-colors">
                         <MessageCircle className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                       </div>
                     </button>

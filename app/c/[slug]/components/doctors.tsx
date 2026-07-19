@@ -4,7 +4,7 @@ import type { Doctor } from './types';
 import { GraduationCap, Star, CalendarDays } from 'lucide-react';
 
 const AVATAR_COLORS = [
-  'from-blue-500 to-blue-700',
+  'from-blue-400 to-blue-600',
   'from-violet-500 to-purple-700',
   'from-emerald-500 to-teal-700',
   'from-amber-500 to-orange-600',
@@ -102,7 +102,7 @@ export default function Doctors({
                 {/* Book button */}
                 <button
                   onClick={() => onBookClick(doctor)}
-                  className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-bold flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+                  className="w-full py-3 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[14px] font-bold flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
                 >
                   <CalendarDays className="w-4 h-4" />
                   Цаг авах

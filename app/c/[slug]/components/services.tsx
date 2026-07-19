@@ -4,23 +4,13 @@ import type { Service } from './types';
 import { Clock, ArrowUpRight } from 'lucide-react';
 
 const SERVICE_ICONS = ['🦷', '✨', '💎', '🪥', '😁', '🌟', '🩺', '💉'];
-const SERVICE_COLORS = [
-  'from-blue-50 to-indigo-50 border-blue-100',
-  'from-violet-50 to-purple-50 border-violet-100',
-  'from-emerald-50 to-teal-50 border-emerald-100',
-  'from-amber-50 to-orange-50 border-amber-100',
-  'from-pink-50 to-rose-50 border-pink-100',
-  'from-cyan-50 to-sky-50 border-cyan-100',
-  'from-blue-50 to-indigo-50 border-blue-100',
-  'from-violet-50 to-purple-50 border-violet-100',
-];
 
 export default function Services({
   services,
-  onChatClick,
+  onServiceClick,
 }: {
   services: Service[];
-  onChatClick: () => void;
+  onServiceClick: (service: Service) => void;
 }) {
   if (services.length === 0) return null;
 
@@ -52,15 +42,15 @@ export default function Services({
           {services.map((service, idx) => (
             <button
               key={service.id}
-              onClick={onChatClick}
-              className={`group text-left bg-gradient-to-br ${SERVICE_COLORS[idx % SERVICE_COLORS.length]} border rounded-3xl p-6 hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300`}
+              onClick={() => onServiceClick(service)}
+              className="group text-left bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:-translate-y-1.5 hover:shadow-xl hover:border-blue-200 transition-all duration-300"
             >
               {/* Icon row */}
               <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                   {SERVICE_ICONS[idx % SERVICE_ICONS.length]}
                 </div>
-                <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full">
+                <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full">
                   <Clock className="w-3 h-3 text-slate-400" />
                   <span className="text-[11px] font-medium text-slate-500">{service.duration_minutes} мин</span>
                 </div>
@@ -72,15 +62,15 @@ export default function Services({
               </h3>
 
               {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-white/60">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                 <div>
                   <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Үнэ</div>
                   <div className="text-[20px] font-extrabold text-blue-600">
                     ₮{service.price_mnt.toLocaleString()}
                   </div>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                  <ArrowUpRight className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" />
                 </div>
               </div>
             </button>

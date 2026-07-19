@@ -8,6 +8,7 @@ import Services from './components/services';
 import Doctors from './components/doctors';
 import Contact from './components/contact';
 import BookingModal from './components/booking-modal';
+import ServiceDoctorsModal from './components/service-doctors-modal';
 import DentalTips from './components/dental-tips';
 
 import type { Clinic, Doctor, Service } from './components/types';
@@ -22,6 +23,8 @@ export default function ClinicLanding({
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState<string | undefined>();
   const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
+  const [pickerService, setPickerService] = useState<Service | null>(null);
+  const [bookingService, setBookingService] = useState<Service | null>(null);
   const services = (clinic.services ?? []) as Service[];
   const openChat = () => { setChatMessage(undefined); setShowChat(true); };
   const openChatWithMessage = (msg: string) => { setChatMessage(msg); setShowChat(true); };
@@ -32,8 +35,8 @@ export default function ClinicLanding({
   return (
     <div className="min-h-screen bg-white">
       <Nav clinic={clinic} onBookClick={scrollToDoctors} />
-      <Hero clinic={clinic} doctors={doctors} services={services} onChatClick={openChat} />
-      <Services services={services} onChatClick={openChat} />
+      <Hero clinic={clinic} doctors={doctors} services={services} onBookClick={scrollToDoctors} />
+      <Services services={services} onServiceClick={setPickerService} />
       <DentalTips onAskQuestion={openChatWithMessage} />
       <Doctors doctors={doctors} onChatClick={openChat} onBookClick={setBookingDoctor} />
       <Contact clinic={clinic} onBookClick={scrollToDoctors} onAskQuestion={openChatWithMessage} />
@@ -46,11 +49,25 @@ export default function ClinicLanding({
           className="fixed bottom-6 right-6 z-40 group"
           aria-label="Чат нээх"
         >
-          <div className="absolute inset-0 rounded-full bg-teal-500 animate-ping opacity-30"></div>
-          <div className="relative w-14 h-14 rounded-full bg-teal-700 hover:bg-teal-800 text-white shadow-2xl shadow-teal-900/40 hover:scale-110 active:scale-95 transition flex items-center justify-center text-2xl">
+          <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-30"></div>
+          <div className="relative w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-2xl shadow-blue-900/40 hover:scale-110 active:scale-95 transition flex items-center justify-center text-2xl">
             💬
           </div>
         </button>
+      )}
+
+      {/* Service → Doctor picker */}
+      {pickerService && (
+        <ServiceDoctorsModal
+          service={pickerService}
+          doctors={doctors}
+          onSelectDoctor={(doctor) => {
+            setBookingService(pickerService);
+            setBookingDoctor(doctor);
+            setPickerService(null);
+          }}
+          onClose={() => setPickerService(null)}
+        />
       )}
 
       {/* Booking Modal */}
@@ -59,7 +76,8 @@ export default function ClinicLanding({
           doctor={bookingDoctor}
           clinicId={clinic.id}
           services={services}
-          onClose={() => setBookingDoctor(null)}
+          initialService={bookingService}
+          onClose={() => { setBookingDoctor(null); setBookingService(null); }}
         />
       )}
 
