@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -25,7 +25,14 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // getSession() нь cookie-г шууд уншдаг — network call хийдэггүй тул хурдан
+  // Энэ бол ЗӨВХӨН урьдчилсан шүүлтүүр (optimistic check) — cookie-г уншаад
+  // хурдан redirect хийхэд зориулагдсан. getSession() нь JWT-г баталгаажуулдаггүй
+  // тул үүнийг хамгаалалт гэж БҮҮ найд.
+  //
+  // Жинхэнэ шалгалт нь app/(dashboard)/layout.tsx дээр getCurrentUser()-ээр
+  // (getUser() → баталгаажуулсан) хийгддэг. Next.js өөрөө proxy дотор
+  // сүлжээний дуудлага хийхийг зөвлөдөггүй — prefetch хүсэлт бүр дээр
+  // ажилладаг тул удаашруулна.
   const { data: { session } } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   const pathname = request.nextUrl.pathname;
@@ -46,8 +53,9 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// Зөвхөн энэ proxy үнэхээр ажилладаг зам дээр ажиллуулна. Public хуудсууд
+// (/c/[slug]) болон api route-ууд redirect логикт огт хамаардаггүй тул
+// тэднийг дэмий боловсруулахгүй.
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/test-chat|api/health|api/webhook|test).*)',
-  ],
+  matcher: ['/dashboard/:path*', '/login', '/signup'],
 };
