@@ -12,10 +12,8 @@ type Service = {
 };
 
 export default function ServicesManager({
-  clinicId,
   initialServices,
 }: {
-  clinicId: string;
   initialServices: Service[];
 }) {
   const [services, setServices] = useState<Service[]>(initialServices);
@@ -31,7 +29,7 @@ export default function ServicesManager({
 
   async function handleAdd(formData: FormData) {
     setLoading(true);
-    const result = await addService(clinicId, {
+    const result = await addService({
       name: formData.get('name') as string,
       price_mnt: parseInt(formData.get('price_mnt') as string, 10),
       duration_minutes: parseInt(formData.get('duration_minutes') as string, 10),
@@ -65,7 +63,7 @@ export default function ServicesManager({
       description: (formData.get('description') as string) || undefined,
     };
 
-    const result = await updateService(clinicId, serviceId, updates);
+    const result = await updateService(serviceId, updates);
 
     if (result.success) {
       setServices(services.map(s => (s.id === serviceId ? { ...s, ...updates } : s)));
@@ -81,7 +79,7 @@ export default function ServicesManager({
     if (!confirm(`"${serviceName}" үйлчилгээг устгах уу?`)) return;
 
     setLoading(true);
-    const result = await deleteService(clinicId, serviceId);
+    const result = await deleteService(serviceId);
 
     if (result.success) {
       setServices(services.filter(s => s.id !== serviceId));

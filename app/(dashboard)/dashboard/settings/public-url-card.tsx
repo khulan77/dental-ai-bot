@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { updateClinicSlug } from '@/lib/db/clinic-actions';
 import { CopyLinkButton } from './copy-link-button';
 
-export function PublicUrlCard({ clinicId, slug }: { clinicId: string; slug: string }) {
+export function PublicUrlCard({ slug }: { slug: string }) {
   const [origin, setOrigin] = useState('');
   const [editing, setEditing] = useState(false);
   const [newSlug, setNewSlug] = useState(slug);
@@ -30,7 +30,7 @@ export function PublicUrlCard({ clinicId, slug }: { clinicId: string; slug: stri
     }
 
     setSaving(true);
-    const result = await updateClinicSlug(clinicId, newSlug);
+    const result = await updateClinicSlug(newSlug);
 
     if (result.success && result.slug) {
       setCurrentSlug(result.slug);

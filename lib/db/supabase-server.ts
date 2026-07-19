@@ -55,3 +55,26 @@ export async function getCurrentClinic() {
 
   return data;
 }
+
+/**
+ * Нэвтэрсэн хэрэглэгчийн эзэмшдэг clinic-ийн id-г буцаана.
+ *
+ * Server action бүр өөрчлөлт хийхийн өмнө үүнийг дуудна. clinicId-г
+ * клиентээс авалгүй сесс-ээс тодорхойлдог тул өөр клиникийн id дамжуулж
+ * хуурах боломжгүй. Эрхгүй бол алдаа шиднэ — дуудагч талын try/catch
+ * үүнийг { success: false, error } болгож хөрвүүлнэ.
+ */
+export async function requireOwnedClinicId(): Promise<string> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Нэвтрээгүй байна');
+
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from('clinics')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single();
+
+  if (!data) throw new Error('Танд эмнэлэг бүртгэлгүй байна');
+  return data.id as string;
+}

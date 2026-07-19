@@ -22,12 +22,10 @@ type Doctor = {
 };
 
 export default function DoctorsManager({
-  clinicId,
   services,
   clinicHours,
   initialDoctors,
 }: {
-  clinicId: string;
   services: Service[];
   clinicHours: BusinessHoursData;
   initialDoctors: Doctor[];
@@ -45,7 +43,7 @@ export default function DoctorsManager({
 
   async function handleAdd(data: any) {
     setLoading(true);
-    const result = await addDoctor(clinicId, data);
+    const result = await addDoctor(data);
 
     if (result.success && result.doctor) {
       setDoctors([...doctors, result.doctor]);
@@ -59,7 +57,7 @@ export default function DoctorsManager({
 
   async function handleUpdate(doctorId: string, data: any) {
     setLoading(true);
-    const result = await updateDoctor(clinicId, doctorId, data);
+    const result = await updateDoctor(doctorId, data);
 
     if (result.success) {
       setDoctors(doctors.map(d => (d.id === doctorId ? { ...d, ...data } : d)));
@@ -75,7 +73,7 @@ export default function DoctorsManager({
     if (!confirm(`${name}-г устгах уу? Энэ үйлдлийг буцаах боломжгүй.`)) return;
 
     setLoading(true);
-    const result = await deleteDoctor(clinicId, doctorId);
+    const result = await deleteDoctor(doctorId);
 
     if (result.success) {
       setDoctors(doctors.filter(d => d.id !== doctorId));

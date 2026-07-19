@@ -35,10 +35,7 @@ export default async function ServicesPage() {
         <TabLink href="/dashboard/settings/instagram">Instagram</TabLink>
       </div>
 
-      <ServicesManager
-        clinicId={clinic.id}
-        initialServices={clinic.services ?? []}
-      />
+      <ServicesManager initialServices={clinic.services ?? []} />
     </div>
   );
 }

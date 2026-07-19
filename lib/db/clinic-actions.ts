@@ -1,7 +1,21 @@
 'use server';
 
-import { createAdminClient } from './supabase';
+import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
+import { createAdminClient } from './supabase';
+import { requireOwnedClinicId } from './supabase-server';
+import { validateSlug } from '@/lib/validation';
+import type { Doctor } from '@/types/database';
+
+/**
+ * ЧУХАЛ: Энэ файлын функцууд бол нийтэд нээлттэй HTTP endpoint юм
+ * ('use server' → Next.js сүлжээгээр дуудагдахаар хувиргана). Admin client
+ * нь service_role key ашигладаг тул RLS-ийг тойрдог — өөрөөр хэлбэл
+ * өгөгдлийн сангийн хамгаалалт энд ажиллахгүй.
+ *
+ * Тиймээс clinicId-г хэзээ ч параметрээр бүү ав. requireOwnedClinicId()
+ * сесс-ээс тодорхойлно; шинэ action нэмэх бүртээ мөн адил хий.
+ */
 
 export type ClinicUpdateData = {
   name?: string;
@@ -19,10 +33,10 @@ export type ClinicUpdateData = {
 };
 
 export async function updateClinic(
-  clinicId: string,
   data: ClinicUpdateData
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
     const { error } = await supabase
       .from('clinics')
@@ -49,8 +63,6 @@ export async function updateClinic(
   }
 }
 
-import { randomUUID } from 'crypto';
-
 export type ServiceData = {
   id?: string;
   name: string;
@@ -63,12 +75,12 @@ export type ServiceData = {
  * Шинэ үйлчилгээ нэмэх
  */
 export async function addService(
-  clinicId: string,
   service: Omit<ServiceData, 'id'>
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
-    
+
     // Одоогийн services-ийг авах
     const { data: clinic, error: fetchError } = await supabase
       .from('clinics')
@@ -112,11 +124,11 @@ export async function addService(
  * Үйлчилгээ засах
  */
 export async function updateService(
-  clinicId: string,
   serviceId: string,
   updates: Partial<Omit<ServiceData, 'id'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
     const { data: clinic, error: fetchError } = await supabase
@@ -157,10 +169,10 @@ export async function updateService(
  * Үйлчилгээ устгах
  */
 export async function deleteService(
-  clinicId: string,
   serviceId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
     const { data: clinic, error: fetchError } = await supabase
@@ -214,10 +226,10 @@ export type BusinessHoursData = {
  * Ажлын цагийг шинэчлэх
  */
 export async function updateBusinessHours(
-  clinicId: string,
   hours: BusinessHoursData
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
     const { error } = await supabase
@@ -242,9 +254,6 @@ export async function updateBusinessHours(
   }
 }
 
-
-import type { Doctor } from '@/types/database';
-
 export type DoctorInput = {
   name: string;
   specialty?: string;
@@ -257,10 +266,10 @@ export type DoctorInput = {
  * Эмч нэмэх
  */
 export async function addDoctor(
-  clinicId: string,
   data: DoctorInput
 ): Promise<{ success: boolean; error?: string; doctor?: Doctor }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
     // Display order авах (одоогийн доктор тоо + 1)
@@ -303,11 +312,11 @@ export async function addDoctor(
  * Эмч засах
  */
 export async function updateDoctor(
-  clinicId: string,
   doctorId: string,
   data: Partial<DoctorInput>
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
     const updates: Record<string, unknown> = {};
@@ -343,10 +352,10 @@ export async function updateDoctor(
  * Эмч устгах
  */
 export async function deleteDoctor(
-  clinicId: string,
   doctorId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
     const { error } = await supabase
@@ -375,31 +384,17 @@ export async function deleteDoctor(
  * Clinic-ийн slug өөрчлөх
  */
 export async function updateClinicSlug(
-  clinicId: string,
   newSlug: string
 ): Promise<{ success: boolean; error?: string; slug?: string }> {
   try {
+    const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
 
-    const cleanSlug = newSlug.toLowerCase().trim();
-
-    // Validation
-    if (cleanSlug.length < 3 || cleanSlug.length > 30) {
-      return { success: false, error: '3-30 тэмдэгт байх ёстой' };
+    const slugResult = validateSlug(newSlug);
+    if (!slugResult.ok) {
+      return { success: false, error: slugResult.error };
     }
-
-    if (!/^[a-z0-9-]+$/.test(cleanSlug)) {
-      return { success: false, error: 'Зөвхөн англи жижиг үсэг, тоо, зураас (-)' };
-    }
-
-    if (cleanSlug.startsWith('-') || cleanSlug.endsWith('-')) {
-      return { success: false, error: 'Зураас эхэнд эсвэл төгсгөлд байж болохгүй' };
-    }
-
-    const RESERVED = ['admin', 'api', 'dashboard', 'login', 'signup', 'test', 'c', 'auth', 'settings'];
-    if (RESERVED.includes(cleanSlug)) {
-      return { success: false, error: 'Энэ нэр ашиглах боломжгүй' };
-    }
+    const cleanSlug = slugResult.slug;
 
     // Давхцал шалгах
     const { data: existing } = await supabase

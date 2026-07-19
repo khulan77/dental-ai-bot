@@ -41,7 +41,6 @@ export default async function DoctorsPage() {
       </div>
 
       <DoctorsManager
-        clinicId={data.clinic.id}
         services={data.clinic.services ?? []}
         clinicHours={data.clinic.business_hours}
         initialDoctors={data.doctors}

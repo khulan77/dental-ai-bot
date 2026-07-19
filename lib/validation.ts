@@ -42,6 +42,47 @@ export const bookSchema = z.object({
     }),
 });
 
+// POST /api/setup-clinic
+// userId-г ЗӨВХӨН сесс-ээс авна — оролтод байлгахгүй (өөр хүний нэрээр
+// клиник үүсгэхээс сэргийлнэ).
+export const setupClinicSchema = z.object({
+  clinicName: z.string().trim().min(1, 'Клиникийн нэр шаардлагатай').max(100),
+  slug: z.string().trim().min(1, 'URL шаардлагатай'),
+});
+
+/**
+ * Клиникийн slug-ийн дүрэм — нэг эх сурвалж.
+ * check-slug, setup-clinic, updateClinicSlug гурав ижил дүрэм хэрэглэнэ.
+ */
+const RESERVED_SLUGS = [
+  'admin', 'api', 'dashboard', 'login', 'signup', 'test', 'c', 'auth', 'settings',
+];
+
+export type SlugResult =
+  | { ok: true; slug: string }
+  | { ok: false; error: string };
+
+export function validateSlug(raw: string): SlugResult {
+  const slug = raw.toLowerCase().trim();
+
+  if (slug.length < 3) return { ok: false, error: 'Хамгийн багадаа 3 тэмдэгт' };
+  if (slug.length > 30) return { ok: false, error: 'Хамгийн ихдээ 30 тэмдэгт' };
+
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    return { ok: false, error: 'Зөвхөн англи жижиг үсэг, тоо, зураас (-) ашиглана' };
+  }
+
+  if (slug.startsWith('-') || slug.endsWith('-')) {
+    return { ok: false, error: 'Зураас эхэнд эсвэл төгсгөлд байж болохгүй' };
+  }
+
+  if (RESERVED_SLUGS.includes(slug)) {
+    return { ok: false, error: 'Энэ нэр ашиглах боломжгүй' };
+  }
+
+  return { ok: true, slug };
+}
+
 /**
  * Zod алдааг хэрэглэгчид ойлгомжтой нэг мөр болгох.
  */

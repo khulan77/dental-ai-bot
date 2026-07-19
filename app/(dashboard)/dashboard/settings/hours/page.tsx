@@ -40,10 +40,7 @@ export default async function HoursPage() {
         </TabLink>
       </div>
 
-      <HoursManager
-        clinicId={clinic.id}
-        initialHours={clinic.business_hours}
-      />
+      <HoursManager initialHours={clinic.business_hours} />
     </div>
   );
 }

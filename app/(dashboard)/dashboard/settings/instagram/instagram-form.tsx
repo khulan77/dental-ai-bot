@@ -4,13 +4,12 @@ import { useState } from 'react';
 import { updateClinic } from '@/lib/db/clinic-actions';
 
 type Props = {
-  clinicId: string;
   pageId: string | null;
   hasToken: boolean;
   webhookUrl: string;
 };
 
-export default function InstagramForm({ clinicId, pageId, hasToken, webhookUrl }: Props) {
+export default function InstagramForm({ pageId, hasToken, webhookUrl }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -32,7 +31,7 @@ export default function InstagramForm({ clinicId, pageId, hasToken, webhookUrl }
       data.meta_page_access_token = newToken;
     }
 
-    const result = await updateClinic(clinicId, data);
+    const result = await updateClinic(data);
 
     if (result.success) {
       setMessage({ type: 'success', text: 'Амжилттай хадгалагдлаа!' });

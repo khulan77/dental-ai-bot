@@ -25,10 +25,8 @@ const TIME_OPTIONS = (() => {
 })();
 
 export default function HoursManager({
-  clinicId,
   initialHours,
 }: {
-  clinicId: string;
   initialHours: BusinessHoursData;
 }) {
   const [hours, setHours] = useState<BusinessHoursData>(initialHours);
@@ -61,7 +59,7 @@ export default function HoursManager({
     setSaving(true);
     setMessage(null);
 
-    const result = await updateBusinessHours(clinicId, hours);
+    const result = await updateBusinessHours(hours);
 
     if (result.success) {
       setMessage({ type: 'success', text: 'Ажлын цаг амжилттай хадгалагдлаа!' });

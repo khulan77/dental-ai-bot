@@ -33,7 +33,6 @@ export default async function InstagramSettingsPage() {
       </div>
 
       <InstagramForm
-        clinicId={clinic.id}
         pageId={clinic.instagram_page_id ?? null}
         hasToken={Boolean(clinic.meta_page_access_token)}
         webhookUrl={webhookUrl}

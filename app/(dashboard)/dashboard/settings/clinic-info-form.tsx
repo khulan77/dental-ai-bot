@@ -24,7 +24,7 @@ export default function ClinicInfoForm({ clinic }: { clinic: any }) {
       instagram_url: formData.get('instagram_url') as string,
     };
 
-    const result = await updateClinic(clinic.id, data);
+    const result = await updateClinic(data);
 
     if (result.success) {
       setMessage({ type: 'success', text: 'Амжилттай хадгалагдлаа!' });
