@@ -97,22 +97,21 @@ export default function SignupPage() {
       return;
     }
 
-    if (!signUpData.user) {
-      setError('Бүртгэл амжилтгүй. Email confirmation идэвхтэй байж магадгүй.');
+    // setup-clinic нь хэрэглэгчийг сесс-ээр таних тул сесс заавал хэрэгтэй.
+    // Email confirmation идэвхтэй үед signUp сесс буцаадаггүй.
+    if (!signUpData.session) {
+      setError(
+        'Бүртгэл үүслээ. Имэйлээ баталгаажуулаад нэвтэрч орно уу.'
+      );
       setLoading(false);
       return;
     }
 
-    // 2. Шинэ клиник үүсгэх
+    // 2. Шинэ клиник үүсгэх (userId-г сервер сесс-ээс тодорхойлно)
     const response = await fetch('/api/setup-clinic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: signUpData.user.id,
-        clinicName,
-        slug,
-        ownerEmail: email,
-      }),
+      body: JSON.stringify({ clinicName, slug }),
     });
 
     if (!response.ok) {

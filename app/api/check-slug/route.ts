@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
-
-const RESERVED_SLUGS = ['admin', 'api', 'dashboard', 'login', 'signup', 'test', 'c', 'auth', 'settings'];
+import { validateSlug } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
@@ -11,38 +10,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ available: false, error: 'Slug шаардлагатай' });
     }
 
-    // Slug-ийг шалгах
-    const cleanSlug = slug.toLowerCase().trim();
-
-    // Урт шалгах
-    if (cleanSlug.length < 3) {
-      return NextResponse.json({ available: false, error: 'Хамгийн багадаа 3 тэмдэгт' });
+    const result = validateSlug(slug);
+    if (!result.ok) {
+      return NextResponse.json({ available: false, error: result.error });
     }
-
-    if (cleanSlug.length > 30) {
-      return NextResponse.json({ available: false, error: 'Хамгийн ихдээ 30 тэмдэгт' });
-    }
-
-    // Format шалгах (зөвхөн a-z, 0-9, -)
-    if (!/^[a-z0-9-]+$/.test(cleanSlug)) {
-      return NextResponse.json({
-        available: false,
-        error: 'Зөвхөн англи жижиг үсэг, тоо, зураас (-) ашиглана',
-      });
-    }
-
-    // Эхэнд эсвэл төгсгөлд зураас
-    if (cleanSlug.startsWith('-') || cleanSlug.endsWith('-')) {
-      return NextResponse.json({
-        available: false,
-        error: 'Зураас эхэнд эсвэл төгсгөлд байж болохгүй',
-      });
-    }
-
-    // Хориглосон slug
-    if (RESERVED_SLUGS.includes(cleanSlug)) {
-      return NextResponse.json({ available: false, error: 'Энэ нэр ашиглах боломжгүй' });
-    }
+    const cleanSlug = result.slug;
 
     // Database-аас давхцал шалгах
     const supabase = createAdminClient();
