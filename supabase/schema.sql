@@ -48,6 +48,7 @@ create table if not exists public.doctors (
   name           text not null,
   specialty      text,
   bio            text,
+  email          text,                        -- цаг захиалгын мэдэгдэл хүлээн авах хаяг
   avatar_url     text,
   custom_hours   jsonb,                       -- null бол clinic default цаг
   service_ids    jsonb not null default '[]'::jsonb,  -- empty array бол бүх үйлчилгээ

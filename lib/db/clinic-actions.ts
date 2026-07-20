@@ -257,6 +257,8 @@ export async function updateBusinessHours(
 export type DoctorInput = {
   name: string;
   specialty?: string;
+  /** Цаг захиалгын мэдэгдэл хүлээн авах хаяг. Хоосон бол зөвхөн эзэн авна. */
+  email?: string;
   bio?: string;
   service_ids?: string[];
   custom_hours?: BusinessHoursData | null;
@@ -284,6 +286,7 @@ export async function addDoctor(
         clinic_id: clinicId,
         name: data.name,
         specialty: data.specialty ?? null,
+        email: data.email || null,
         bio: data.bio ?? null,
         service_ids: data.service_ids ?? [],
         custom_hours: data.custom_hours ?? null,
@@ -322,6 +325,7 @@ export async function updateDoctor(
     const updates: Record<string, unknown> = {};
     if (data.name !== undefined) updates.name = data.name;
     if (data.specialty !== undefined) updates.specialty = data.specialty;
+    if (data.email !== undefined) updates.email = data.email || null;
     if (data.bio !== undefined) updates.bio = data.bio;
     if (data.service_ids !== undefined) updates.service_ids = data.service_ids;
     if (data.custom_hours !== undefined) updates.custom_hours = data.custom_hours;

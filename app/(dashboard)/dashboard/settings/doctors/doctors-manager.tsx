@@ -16,6 +16,7 @@ type Doctor = {
   id: string;
   name: string;
   specialty: string | null;
+  email: string | null;
   bio: string | null;
   service_ids: string[];
   custom_hours: BusinessHoursData | null;

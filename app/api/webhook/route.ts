@@ -1,4 +1,6 @@
+import { after } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
+import { notifyNewBooking } from '@/lib/notifications/booking-email';
 import { generateReply } from '@/lib/ai/conversation';
 import { isSlotAvailable } from '@/lib/booking/slots';
 import { getOrCreateConversation, appendMessages } from '@/lib/db/conversations';
@@ -127,6 +129,18 @@ async function handleMessagingEvent(
         .from('conversations')
         .update({ status: 'booked' })
         .eq('id', conversation.id);
+
+      after(() =>
+        notifyNewBooking({
+          clinicId: typedClinic.id,
+          doctorId,
+          customerName: booking.customer_name,
+          customerPhone: booking.customer_phone,
+          service: booking.service,
+          scheduledAt: booking.scheduled_at,
+          source: channel,
+        })
+      );
     } else {
       reply = 'Уучлаарай, энэ цаг аль хэдийн захиалагдсан байна. Өөр цаг сонгоно уу.';
     }

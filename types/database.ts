@@ -94,6 +94,7 @@ export type Doctor = {
   clinic_id: string;
   name: string;
   specialty: string | null;
+  email: string | null;          // цаг захиалгын мэдэгдэл хүлээн авах хаяг
   bio: string | null;
   avatar_url: string | null;
   custom_hours: BusinessHours | null;  // null бол clinic default
