@@ -11,6 +11,7 @@ type Service = {
 type DoctorFormData = {
   name: string;
   specialty: string;
+  email: string;
   bio: string;
   service_ids: string[];
   custom_hours: BusinessHoursData | null;
@@ -47,6 +48,7 @@ export default function DoctorForm({
   initialData?: {
     name: string;
     specialty: string | null;
+    email?: string | null;
     bio: string | null;
     service_ids: string[];
     custom_hours: BusinessHoursData | null;
@@ -60,6 +62,7 @@ export default function DoctorForm({
 }) {
   const [name, setName] = useState(initialData?.name ?? '');
   const [specialty, setSpecialty] = useState(initialData?.specialty ?? '');
+  const [email, setEmail] = useState(initialData?.email ?? '');
   const [bio, setBio] = useState(initialData?.bio ?? '');
   const [allServices, setAllServices] = useState(
     initialData?.service_ids.length === 0 || !initialData
@@ -102,6 +105,7 @@ export default function DoctorForm({
     onSubmit({
       name: name.trim(),
       specialty: specialty.trim(),
+      email: email.trim(),
       bio: bio.trim(),
       service_ids: allServices ? [] : selectedServiceIds,
       custom_hours: useCustomHours ? customHours : null,
@@ -133,6 +137,23 @@ export default function DoctorForm({
             placeholder="Жнь: Терапевт, Ортодонт, Хирург"
             className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-slate-700 mb-1">
+            Имэйл (заавал биш)
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Жнь: anu@emneleg.mn"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="text-[11px] text-slate-400 mt-1">
+            Энэ эмчид цаг захиалагдвал энэ хаяг руу мэдэгдэл очно. Хоосон бол зөвхөн
+            эмнэлгийн эзэн мэдэгдэл авна.
+          </p>
         </div>
 
         <div>

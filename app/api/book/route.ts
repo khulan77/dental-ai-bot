@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
+import { notifyNewBooking } from '@/lib/notifications/booking-email';
 import { bookSchema, firstZodError } from '@/lib/validation';
 import { isSlotAvailable } from '@/lib/booking/slots';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
@@ -47,6 +48,19 @@ export async function POST(request: Request) {
       console.error('Book insert error:', error);
       return NextResponse.json({ error: 'Захиалга үүсгэж чадсангүй' }, { status: 500 });
     }
+
+    // Хариу буцаасны дараа эмнэлэг рүү мэдэгдэнэ — захиалгыг удаашруулахгүй
+    after(() =>
+      notifyNewBooking({
+        clinicId,
+        doctorId: doctorId ?? null,
+        customerName,
+        customerPhone,
+        service,
+        scheduledAt,
+        source: 'web',
+      })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

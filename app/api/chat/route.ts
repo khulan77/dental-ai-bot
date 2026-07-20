@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
+import { notifyNewBooking } from '@/lib/notifications/booking-email';
 import { generateReply } from '@/lib/ai/conversation';
 import { chatSchema, firstZodError } from '@/lib/validation';
 import { isSlotAvailable } from '@/lib/booking/slots';
@@ -71,6 +72,18 @@ export async function POST(request: Request) {
           scheduled_at: booking.scheduled_at,
           status: 'confirmed',
         });
+
+        after(() =>
+          notifyNewBooking({
+            clinicId: clinic.id,
+            doctorId,
+            customerName: booking.customer_name,
+            customerPhone: booking.customer_phone,
+            service: booking.service,
+            scheduledAt: booking.scheduled_at,
+            source: 'chat',
+          })
+        );
       } else {
         reply =
           'Уучлаарай, энэ цаг аль хэдийн захиалагдсан байна. Өөр цаг сонгоно уу.';
