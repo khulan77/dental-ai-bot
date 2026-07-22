@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, Check } from 'lucide-react';
 import type { Doctor, Service } from './types';
 import {
   addClinicDays,
@@ -89,18 +89,32 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
 
   if (done) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
-        <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
-          <div className="text-5xl mb-4">✅</div>
-          <h3 className="text-xl font-bold text-slate-900 mb-3">Захиалга баталгаажлаа!</h3>
-          <div className="bg-slate-50 rounded-2xl p-4 text-left space-y-1.5 mb-6">
-            <p className="text-sm text-slate-700"><span className="font-medium">Эмч:</span> {doctor.name}</p>
-            <p className="text-sm text-slate-700"><span className="font-medium">Үйлчилгээ:</span> {selectedService?.name}</p>
-            <p className="text-sm text-slate-700"><span className="font-medium">Цаг:</span> {selectedDate} {selectedTime}</p>
-            <p className="text-sm text-slate-700"><span className="font-medium">Нэр:</span> {customerName}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={onClose}>
+        <div
+          className="site-card w-full max-w-sm p-8 text-center"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="w-12 h-12 rounded-full bg-[var(--site-accent-soft)] text-[var(--site-accent)] flex items-center justify-center mx-auto mb-4">
+            <Check className="w-6 h-6" />
           </div>
-          <p className="text-slate-400 text-xs mb-5">Удахгүй танд холбогдох болно</p>
-          <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/30 transition">
+          <h3 className="site-h2 text-[22px] mb-5">Захиалга баталгаажлаа</h3>
+
+          <div className="rounded-[var(--site-r-btn)] border border-[var(--site-line)] divide-y divide-[var(--site-line)] text-left mb-6">
+            {[
+              ['Эмч', doctor.name],
+              ['Үйлчилгээ', selectedService?.name ?? '—'],
+              ['Цаг', `${selectedDate} ${selectedTime}`],
+              ['Нэр', customerName],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between gap-4 px-4 py-2.5">
+                <span className="text-[13px] text-[var(--site-muted)]">{label}</span>
+                <span className="text-[13px] font-medium text-[var(--site-ink)] text-right">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="site-body mb-5">Удахгүй танд холбогдох болно.</p>
+          <button onClick={onClose} className="site-btn w-full">
             Хаах
           </button>
         </div>
@@ -109,45 +123,45 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4" onClick={onClose}>
-      <div
-        className="w-full sm:max-w-lg bg-white sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] animate-in slide-in-from-bottom duration-300"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-3 p-5 border-b border-slate-100 flex-shrink-0">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-500/30">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 sm:p-4" onClick={onClose}>
+      <div className="site-modal" onClick={e => e.stopPropagation()}>
+
+        {/* Толгой */}
+        <div className="site-modal-head">
+          <div className="w-11 h-11 rounded-[var(--site-r-btn)] bg-[var(--site-accent-soft)] text-[var(--site-accent)] flex items-center justify-center font-semibold text-[17px] shrink-0">
             {doctor.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Цаг захиалах</p>
-            <h3 className="font-semibold text-slate-900 truncate leading-tight">{doctor.name}</h3>
-            {doctor.specialty && <p className="text-xs text-slate-500">{doctor.specialty}</p>}
+            <p className="site-eyebrow mb-0">Цаг захиалах</p>
+            <h3 className="site-h3 truncate">{doctor.name}</h3>
+            {doctor.specialty && (
+              <p className="text-[13px] text-[var(--site-muted)] truncate">{doctor.specialty}</p>
+            )}
           </div>
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition flex-shrink-0">
-            <X className="w-5 h-5 text-slate-500" />
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--site-bg-soft)] transition-colors shrink-0"
+          >
+            <X className="w-5 h-5 text-[var(--site-muted)]" />
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-5">
+        {/* Гүйдэг хэсэг */}
+        <div className="overflow-y-auto flex-1 p-5 space-y-6">
 
-          {/* Service */}
+          {/* Үйлчилгээ */}
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Үйлчилгээ</p>
+            <p className="site-label">Үйлчилгээ</p>
             <div className="space-y-2">
               {doctorServices.map(s => (
                 <button
                   key={s.id}
                   onClick={() => setSelectedService(s)}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
-                    selectedService?.id === s.id
-                      ? 'border-blue-400 bg-blue-50'
-                      : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'
-                  }`}
+                  aria-pressed={selectedService?.id === s.id}
+                  className="site-option w-full flex items-center justify-between p-3.5"
                 >
-                  <span className="text-sm font-medium text-slate-900">{s.name}</span>
-                  <span className="text-sm font-semibold text-blue-600 ml-2 flex-shrink-0">
+                  <span className="text-[14px] font-medium text-[var(--site-ink)]">{s.name}</span>
+                  <span className="text-[14px] font-semibold text-[var(--site-accent)] ml-2 shrink-0">
                     {s.price_mnt.toLocaleString()}₮
                   </span>
                 </button>
@@ -155,9 +169,9 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
             </div>
           </div>
 
-          {/* Date */}
+          {/* Өдөр */}
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <p className="site-label">
               <Calendar className="w-3.5 h-3.5" /> Өдөр
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -165,32 +179,29 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
                 <button
                   key={d.iso}
                   onClick={() => setSelectedDate(d.iso)}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    selectedDate === d.iso
-                      ? 'border-blue-400 bg-blue-50'
-                      : 'border-slate-200 hover:border-blue-300'
-                  }`}
+                  aria-pressed={selectedDate === d.iso}
+                  className="site-option p-3 text-center"
                 >
-                  <div className="text-sm font-semibold text-slate-900">{d.label}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{d.dayName}</div>
+                  <div className="text-[14px] font-medium text-[var(--site-ink)]">{d.label}</div>
+                  <div className="text-[12px] text-[var(--site-muted)] mt-0.5">{d.dayName}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Time slots */}
+          {/* Сул цаг */}
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <p className="site-label">
               <Clock className="w-3.5 h-3.5" /> Сул цагууд
             </p>
             {loadingSlots ? (
               <div className="flex gap-1.5 py-5 justify-center">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.15s]" />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.3s]" />
+                <div className="w-1.5 h-1.5 bg-[var(--site-accent)] rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-[var(--site-accent)] rounded-full animate-bounce [animation-delay:0.15s]" />
+                <div className="w-1.5 h-1.5 bg-[var(--site-accent)] rounded-full animate-bounce [animation-delay:0.3s]" />
               </div>
             ) : slots.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-4 bg-slate-50 rounded-xl">
+              <p className="site-body text-center py-4 rounded-[var(--site-r-btn)] bg-[var(--site-bg-soft)] border border-[var(--site-line)]">
                 Энэ өдөр сул цаг байхгүй байна
               </p>
             ) : (
@@ -199,11 +210,8 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
                   <button
                     key={t}
                     onClick={() => setSelectedTime(t)}
-                    className={`py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                      selectedTime === t
-                        ? 'border-blue-400 bg-blue-500 text-white shadow-sm'
-                        : 'border-slate-200 text-slate-700 hover:border-blue-400'
-                    }`}
+                    aria-pressed={selectedTime === t}
+                    className="site-option py-2.5 text-center text-[14px] font-medium text-[var(--site-ink)]"
                   >
                     {t}
                   </button>
@@ -212,10 +220,10 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
             )}
           </div>
 
-          {/* Name & Phone */}
-          <div className="space-y-3">
+          {/* Нэр, утас */}
+          <div className="space-y-4">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <p className="site-label">
                 <User className="w-3.5 h-3.5" /> Таны нэр
               </p>
               <input
@@ -223,11 +231,11 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
                 placeholder="Овог Нэр"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="site-input"
               />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <p className="site-label">
                 <Phone className="w-3.5 h-3.5" /> Утасны дугаар
               </p>
               <input
@@ -235,26 +243,26 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
                 placeholder="9900 0000"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="site-input"
               />
             </div>
           </div>
 
           {error && (
-            <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-xl p-3">
-              ⚠️ {error}
+            <p className="text-[13px] text-red-700 bg-red-50 border border-red-200 rounded-[var(--site-r-btn)] px-4 py-3">
+              {error}
             </p>
           )}
         </div>
 
-        {/* Submit */}
-        <div className="p-5 border-t border-slate-100 flex-shrink-0">
+        {/* Илгээх */}
+        <div className="site-modal-foot">
           <button
             onClick={handleSubmit}
             disabled={loading || !selectedService || !selectedDate || !selectedTime || !customerName.trim() || !customerPhone.trim()}
-            className="w-full py-3.5 bg-gradient-to-r from-blue-400 to-blue-500 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none text-white rounded-xl font-semibold text-sm transition-all"
+            className="site-btn w-full disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading ? 'Захиалж байна...' : 'Цаг захиалах →'}
+            {loading ? 'Захиалж байна...' : 'Цаг захиалах'}
           </button>
         </div>
       </div>

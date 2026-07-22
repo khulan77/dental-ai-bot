@@ -4,7 +4,6 @@
 
 @theme {
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-manrope), system-ui, sans-serif;
 }
 
 body {
@@ -37,9 +36,7 @@ body {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -234,37 +231,238 @@ body {
 }
 
 /* ═══════════════════════════════════════════
-   DENTAL LANDING — Premium Healthcare
+   ЭМНЭЛГИЙН НИЙТИЙН САЙТ — design tokens
+   Бүх хэсэг ЗӨВХӨН эдгээрийг хэрэглэнэ.
+   Шинэ өнгө, шинэ радиус components дотор бичихгүй.
    ═══════════════════════════════════════════ */
 
 :root {
-  /* Cream-paper white */
-  --bg-paper: #FAFAF7;
-  --bg-white: #FFFFFF;
-  
-  /* Sage green palette */
-  --sage-50: #F1F5F0;
-  --sage-100: #DCE5DA;
-  --sage-300: #9BB597;
-  --sage-500: #5C8259;
-  --sage-700: #3D5B3B;
-  --sage-900: #1F2F1E;
-  
-  /* Soft blue accent */
-  --blue-50: #EFF6FF;
-  --blue-100: #DBEAFE;
-  --blue-500: #3B82F6;
-  --blue-700: #1D4ED8;
-  
-  /* Ink palette */
-  --ink-900: #0A0A0A;
-  --ink-700: #2A2A2A;
-  --ink-500: #555555;
-  --ink-400: #8A8A8A;
-  --ink-200: #E5E5E5;
-  --ink-100: #F0F0F0;
+  /* Гадаргуу */
+  --site-bg: #FFFFFF;
+  --site-bg-soft: #F8FAFC;
+
+  /* Бичиг */
+  --site-ink: #0F172A;
+  --site-ink-soft: #334155;
+  --site-muted: #64748B;
+
+  /* Хүрээ */
+  --site-line: #E5E9F0;
+
+  /* Цорын ганц өнгөт акцент */
+  --site-accent: #1D4ED8;
+  --site-accent-hover: #1E40AF;
+  --site-accent-soft: #EFF6FF;
+
+  /* Радиус — гурав л байна */
+  --site-r-btn: 10px;
+  --site-r-card: 16px;
+  --site-r-pill: 999px;
+
+  /* Сүүдэр — маш нимгэн, картыг хүрээгээр нь ялгана */
+  --site-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
+/* Tailwind-ийн utility-үүд эдгээрийг дарж чаддаг байхын тулд @layer components дотор.
+   Давхаргагүй бичвэл .site-option дээр өгсөн text-center зэрэг ажиллахгүй болно. */
+@layer components {
+  /* ── Бүтэц ── */
+  .site-section {
+    padding: 80px 20px;
+    background: var(--site-bg);
+  }
+  @media (min-width: 640px) {
+    .site-section { padding: 104px 32px; }
+  }
+  .site-section-soft { background: var(--site-bg-soft); }
+  .site-container { max-width: 1120px; margin: 0 auto; }
+
+  /* ── Гарчиг ── */
+  .site-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--site-accent);
+    margin-bottom: 12px;
+  }
+  .site-h1 {
+    font-size: clamp(34px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--site-accent);
+  }
+  .site-h2 {
+    font-size: clamp(28px, 3.4vw, 38px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--site-ink);
+  }
+  .site-h3 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--site-ink);
+  }
+  .site-lead {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--site-muted);
+  }
+  .site-body {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--site-muted);
+  }
+
+  /* ── Карт ── */
+  .site-card {
+    background: var(--site-bg);
+    border: 1px solid var(--site-line);
+    border-radius: var(--site-r-card);
+    box-shadow: var(--site-shadow);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .site-card-hover:hover {
+    border-color: #C7D2FE;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  }
+
+  /* ── Товч ── */
+  .site-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--site-r-btn);
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--site-accent);
+    color: #fff;
+    border: 1px solid var(--site-accent);
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+  .site-btn:hover { background: var(--site-accent-hover); }
+
+  .site-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--site-r-btn);
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--site-bg);
+    color: var(--site-ink-soft);
+    border: 1px solid var(--site-line);
+    transition: border-color 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+  }
+  .site-btn-outline:hover { border-color: #CBD5E1; background: var(--site-bg-soft); }
+
+  /* ── Дүрсний хайрцаг ── */
+  .site-icon-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--site-r-btn);
+    background: var(--site-accent-soft);
+    color: var(--site-accent);
+  }
+
+  /* ── Modal ── */
+  .site-modal {
+    width: 100%;
+    background: var(--site-bg);
+    display: flex;
+    flex-direction: column;
+    max-height: 92vh;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  }
+  @media (min-width: 640px) {
+    .site-modal {
+      max-width: 520px;
+      border-radius: var(--site-r-card);
+    }
+  }
+  .site-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    border-bottom: 1px solid var(--site-line);
+    flex-shrink: 0;
+  }
+  .site-modal-foot {
+    padding: 20px;
+    border-top: 1px solid var(--site-line);
+    flex-shrink: 0;
+  }
+
+  /* ── Маягтын талбар ── */
+  .site-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--site-ink-soft);
+    margin-bottom: 8px;
+  }
+  .site-input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: var(--site-r-btn);
+    border: 1px solid var(--site-line);
+    font-size: 14px;
+    color: var(--site-ink);
+    background: var(--site-bg);
+    transition: border-color 0.2s ease;
+  }
+  .site-input::placeholder { color: #94A3B8; }
+  .site-input:focus {
+    outline: none;
+    border-color: var(--site-accent);
+  }
+
+  /* ── Сонголтын мөр (үйлчилгээ, огноо, эмч) ── */
+  .site-option {
+    border: 1px solid var(--site-line);
+    border-radius: var(--site-r-btn);
+    background: var(--site-bg);
+    text-align: left;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+  }
+  .site-option:hover { border-color: #CBD5E1; }
+  .site-option[aria-pressed='true'] {
+    border-color: var(--site-accent);
+    background: var(--site-accent-soft);
+  }
+
+  /* ── Тэмдэглэгээ ── */
+  .site-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--site-r-pill);
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--site-bg-soft);
+    border: 1px solid var(--site-line);
+    color: var(--site-muted);
+  }
+
+}
 /* Premium reveals */
 @keyframes premium-fade {
   from {
@@ -322,8 +520,3 @@ body {
   animation: image-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Utility */
-.bg-paper { background-color: var(--bg-paper); }
-.bg-sage-soft { background-color: var(--sage-50); }
-.text-sage-deep { color: var(--sage-700); }
-.serif { font-family: var(--font-serif), Georgia, serif; }

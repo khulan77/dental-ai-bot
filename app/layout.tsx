@@ -1,25 +1,12 @@
 import type { Metadata } from 'next';
-import { Instrument_Serif, Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  weight: ['400'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
-  display: 'swap',
-});
-
+// Ганц фонт. cyrillic-ext заавал хэрэгтэй — Ө, Ү, ө, ү үсэг тэнд байдаг.
+// Үүнгүй бол нэг үгэн дотор хоёр өөр фонт холилдож харагддаг.
 const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-jakarta',
+  subsets: ['latin', 'cyrillic', 'cyrillic-ext'],
+  variable: '--font-inter',
   display: 'swap',
 });
 
@@ -34,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn" className={`${instrumentSerif.variable} ${inter.variable} ${plusJakartaSans.variable}`}>
+    <html lang="mn" className={inter.variable}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

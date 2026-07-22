@@ -9,21 +9,13 @@ type Question = {
 };
 
 type Category = {
-  icon: string;
   title: string;
-  color: string;
-  bg: string;
-  border: string;
   questions: Question[];
 };
 
 const CATEGORIES: Category[] = [
   {
-    icon: '🦷',
     title: 'Өдөр тутмын арчилгаа',
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    border: 'border-blue-100',
     questions: [
       { q: 'Өдөрт хэдэн удаа шүдээ угаах хэрэгтэй вэ?', preview: 'Зөв арчилгааны хуваарь' },
       { q: 'Ямар гэдэс хэрэглэх нь зөв вэ?', preview: 'Зөвлөмжит ариутгагч' },
@@ -32,11 +24,7 @@ const CATEGORIES: Category[] = [
     ],
   },
   {
-    icon: '✨',
     title: 'Шүдний цайруулалт',
-    color: 'text-violet-700',
-    bg: 'bg-violet-50',
-    border: 'border-violet-100',
     questions: [
       { q: 'Шүдийг цагаан болгох аргууд юу вэ?', preview: 'Whitening арга барил' },
       { q: 'Whitening procedure хэр удаан үргэлжлэх вэ?', preview: 'Үргэлжлэх хугацаа' },
@@ -45,11 +33,7 @@ const CATEGORIES: Category[] = [
     ],
   },
   {
-    icon: '🩺',
     title: 'Шүдний өвчин тэмдэг',
-    color: 'text-emerald-700',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-100',
     questions: [
       { q: 'Шүд өвдвөл яах хэрэгтэй вэ?', preview: 'Яаралтай арга хэмжээ' },
       { q: 'Буй эрхтэн цус гарвал ямар шалтгаантай вэ?', preview: 'Буй эрхтний өвчин' },
@@ -58,11 +42,7 @@ const CATEGORIES: Category[] = [
     ],
   },
   {
-    icon: '👶',
     title: 'Хүүхдийн шүдний эрүүл мэнд',
-    color: 'text-amber-700',
-    bg: 'bg-amber-50',
-    border: 'border-amber-100',
     questions: [
       { q: 'Хүүхдийн шүдэнд фтор хэрэгтэй юу?', preview: 'Фторын ач тус' },
       { q: 'Хэдэн наснаас эмчид үзүүлэх хэрэгтэй вэ?', preview: 'Эхний эмчийн үзлэг' },
@@ -71,11 +51,7 @@ const CATEGORIES: Category[] = [
     ],
   },
   {
-    icon: '🔧',
     title: 'Шүдний засал эмчилгээ',
-    color: 'text-rose-700',
-    bg: 'bg-rose-50',
-    border: 'border-rose-100',
     questions: [
       { q: 'Суулгамал шүд ба бэхэлгээний ялгаа юу вэ?', preview: 'Implant vs Bridge' },
       { q: 'Шүд авахуулсны дараа яаж арчлах вэ?', preview: 'Extraction дараах арчилгаа' },
@@ -84,11 +60,7 @@ const CATEGORIES: Category[] = [
     ],
   },
   {
-    icon: '😁',
     title: 'Инээмсэглэлийн эрүүл мэнд',
-    color: 'text-cyan-700',
-    bg: 'bg-cyan-50',
-    border: 'border-cyan-100',
     questions: [
       { q: 'Хоол идсэний дараа шүдээ угаах шаардлагатай юу?', preview: 'Хооллолтын дараах арчилгаа' },
       { q: 'Элсэн чихэр шүдэнд яаж нөлөөлдөг вэ?', preview: 'Чихэрийн хор нөлөө' },
@@ -106,67 +78,46 @@ export default function DentalTips({
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <section
-      className="bg-white py-24 sm:py-32 px-5 sm:px-8"
-      style={{ fontFamily: 'var(--font-jakarta, var(--font-sans))' }}
-    >
-      <div className="max-w-6xl mx-auto">
+    <section className="site-section site-section-soft">
+      <div className="site-container">
 
-        {/* Header */}
-        <div className="text-center max-w-xl mx-auto mb-16">
-          <span className="inline-block text-[12px] font-bold text-blue-600 tracking-[0.2em] uppercase mb-4">
-            — AI зөвлөгөө —
-          </span>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight mb-4">
-            Шүдний тухай{' '}
-            <span className="italic font-light text-blue-600" style={{ fontFamily: 'var(--font-serif)' }}>
-              асуулт
-            </span>
-          </h2>
-          <p className="text-[15px] text-slate-500 leading-relaxed">
-            Асуултаа сонгоод AI-д асуугаарай — шууд хариулт авна
+        <div className="text-center max-w-xl mx-auto mb-12">
+          <span className="site-eyebrow">AI зөвлөгөө</span>
+          <h2 className="site-h2 mb-4">Шүдний тухай түгээмэл асуултууд</h2>
+          <p className="site-lead">
+            Асуултаа сонгоод AI ассистентээс шууд хариулт аваарай.
           </p>
         </div>
 
-        {/* Category accordion grid */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        {/* items-start — эс бөгөөс нэг картыг нээхэд хажуугийнх нь сунаж хоосон зай үүснэ */}
+        <div className="grid sm:grid-cols-2 gap-4 items-start">
           {CATEGORIES.map((cat, idx) => (
-            <div
-              key={cat.title}
-              className={`rounded-2xl border ${cat.border} overflow-hidden transition-all duration-200`}
-            >
-              {/* Category header */}
+            <div key={cat.title} className="site-card overflow-hidden">
               <button
                 onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
-                className={`w-full flex items-center justify-between px-5 py-4 ${cat.bg} hover:brightness-95 transition-all`}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[var(--site-bg-soft)] transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{cat.icon}</span>
-                  <span className={`text-[14px] font-bold ${cat.color}`}>{cat.title}</span>
-                </div>
+                <span className="site-h3">{cat.title}</span>
                 <ChevronDown
-                  className={`w-4 h-4 ${cat.color} transition-transform duration-200 ${openIdx === idx ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 text-[var(--site-muted)] transition-transform duration-200 ${openIdx === idx ? 'rotate-180' : ''}`}
                 />
               </button>
 
-              {/* Questions list */}
               {openIdx === idx && (
-                <div className="divide-y divide-slate-50">
+                <div className="border-t border-[var(--site-line)]">
                   {cat.questions.map(item => (
                     <button
                       key={item.q}
                       onClick={() => onAskQuestion(item.q)}
-                      className="w-full flex items-center justify-between px-5 py-3.5 bg-white hover:bg-slate-50 text-left group transition-colors"
+                      className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left group border-b border-[var(--site-line)] last:border-b-0 hover:bg-[var(--site-bg-soft)] transition-colors"
                     >
                       <div>
-                        <p className="text-[13px] font-semibold text-slate-800 group-hover:text-blue-600 transition-colors leading-snug">
+                        <p className="text-[13px] font-medium text-[var(--site-ink)] group-hover:text-[var(--site-accent)] transition-colors leading-snug">
                           {item.q}
                         </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{item.preview}</p>
+                        <p className="text-[12px] text-[var(--site-muted)] mt-0.5">{item.preview}</p>
                       </div>
-                      <div className="ml-3 flex-shrink-0 w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-blue-500 flex items-center justify-center transition-colors">
-                        <MessageCircle className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-                      </div>
+                      <MessageCircle className="w-4 h-4 shrink-0 text-[var(--site-muted)] group-hover:text-[var(--site-accent)] transition-colors" />
                     </button>
                   ))}
                 </div>
@@ -174,8 +125,6 @@ export default function DentalTips({
             </div>
           ))}
         </div>
-
-      
 
       </div>
     </section>

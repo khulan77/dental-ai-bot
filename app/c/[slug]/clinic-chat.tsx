@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Bot, Check } from 'lucide-react';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -17,9 +17,9 @@ type Clinic = {
 };
 
 const QUICK_ACTIONS = [
-  { icon: '📅', label: 'Цаг захиалах', msg: 'Цаг захиалмаар байна' },
-  { icon: '💰', label: 'Үнэ', msg: 'Үйлчилгээний үнэ хэд вэ?' },
-  { icon: '👨‍⚕️', label: 'Эмч нар', msg: 'Танай эмч нар хэн бэ?' },
+  { label: 'Цаг захиалах', msg: 'Цаг захиалмаар байна' },
+  { label: 'Үнэ', msg: 'Үйлчилгээний үнэ хэд вэ?' },
+  { label: 'Эмч нар', msg: 'Танай эмч нар хэн бэ?' },
 ];
 
 export default function ClinicChat({
@@ -121,33 +121,17 @@ export default function ClinicChat({
   const showQuickActions = messages.length === 1 && !loading;
 
   return (
-    <div
-      className="flex flex-col h-full bg-[#F6F8FC]"
-      style={{ fontFamily: 'var(--font-jakarta, var(--font-sans))' }}
-    >
+    <div className="flex flex-col h-full bg-[var(--site-bg-soft)]">
 
-      {/* ── HEADER ── */}
-      <div className="relative flex-shrink-0 bg-gradient-to-br from-blue-400 to-blue-500 px-5 py-4 overflow-hidden">
-        {/* Decorative circles */}
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
-        <div className="absolute -bottom-6 right-16 w-20 h-20 rounded-full bg-white/5" />
-
-        <div className="relative flex items-center gap-3.5">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-2xl shadow-inner">
-              🦷
-            </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-blue-500" />
+      {/* ── ТОЛГОЙ ── */}
+      <div className="flex-shrink-0 bg-white border-b border-[var(--site-line)] px-5 py-4">
+        <div className="flex items-center gap-3.5">
+          <div className="site-icon-tile shrink-0">
+            <Bot className="w-[18px] h-[18px]" />
           </div>
-
-          {/* Info */}
           <div className="flex-1 min-w-0">
-            <h2 className="text-white font-bold text-[15px] leading-tight truncate">{clinic.name}</h2>
-            <p className="text-blue-100/80 text-[12px] mt-0.5 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
-              AI ассистент · 24/7 хариулна
-            </p>
+            <h2 className="site-h3 truncate">{clinic.name}</h2>
+            <p className="text-[13px] text-[var(--site-muted)] mt-0.5">AI ассистент</p>
           </div>
         </div>
       </div>
@@ -162,8 +146,8 @@ export default function ClinicChat({
           >
             {/* AI avatar */}
             {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-[15px] flex-shrink-0 shadow-sm shadow-blue-200">
-                🤖
+              <div className="w-8 h-8 rounded-full bg-[var(--site-accent-soft)] text-[var(--site-accent)] flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4" />
               </div>
             )}
 
@@ -172,8 +156,8 @@ export default function ClinicChat({
               <div
                 className={`px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm ${
                   msg.role === 'user'
-                    ? 'bg-gradient-to-br from-blue-400 to-blue-500 text-white rounded-br-md'
-                    : 'bg-white text-slate-800 rounded-bl-md border border-slate-100/80'
+                    ? 'bg-[var(--site-accent)] text-white rounded-br-md'
+                    : 'bg-white text-[var(--site-ink)] rounded-bl-md border border-[var(--site-line)]'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -182,7 +166,7 @@ export default function ClinicChat({
 
             {/* User avatar */}
             {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-[var(--site-bg-soft)] border border-[var(--site-line)] flex items-center justify-center text-[12px] font-medium text-[var(--site-ink-soft)] shrink-0">
                 Та
               </div>
             )}
@@ -192,14 +176,14 @@ export default function ClinicChat({
         {/* Typing indicator */}
         {loading && (
           <div className="flex items-end gap-2.5 animate-in fade-in duration-200">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-[15px] flex-shrink-0 shadow-sm shadow-blue-200">
-              🤖
+            <div className="w-8 h-8 rounded-full bg-[var(--site-accent-soft)] text-[var(--site-accent)] flex items-center justify-center shrink-0">
+              <Bot className="w-4 h-4" />
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl rounded-bl-md px-4 py-3.5 shadow-sm">
+            <div className="bg-white border border-[var(--site-line)] rounded-2xl rounded-bl-md px-4 py-3.5">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--site-accent)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--site-accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--site-accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -208,11 +192,13 @@ export default function ClinicChat({
         {/* Booking confirmation */}
         {booking && (
           <div className="animate-in fade-in slide-in-from-bottom-3 duration-500">
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-lg flex-shrink-0">✓</div>
+            <div className="site-card p-4 flex items-center gap-3">
+              <div className="site-icon-tile shrink-0">
+                <Check className="w-[18px] h-[18px]" />
+              </div>
               <div>
-                <p className="text-[14px] font-bold text-emerald-900">Цаг захиалга баталгаажлаа!</p>
-                <p className="text-[12px] text-emerald-600 mt-0.5">Удахгүй танд холбогдох болно 📞</p>
+                <p className="text-[14px] font-medium text-[var(--site-ink)]">Цаг захиалга баталгаажлаа</p>
+                <p className="text-[13px] text-[var(--site-muted)] mt-0.5">Удахгүй танд холбогдох болно.</p>
               </div>
             </div>
           </div>
@@ -221,15 +207,14 @@ export default function ClinicChat({
         {/* Quick action chips — only after greeting */}
         {showQuickActions && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-300">
-            <p className="text-[11px] text-slate-400 font-medium mb-2 px-1">Түгээмэл асуултууд</p>
+            <p className="text-[12px] text-[var(--site-muted)] mb-2 px-1">Түгээмэл асуултууд</p>
             <div className="flex flex-wrap gap-2">
               {QUICK_ACTIONS.map(a => (
                 <button
                   key={a.msg}
                   onClick={() => sendQuick(a.msg)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 active:scale-95 transition-all shadow-sm"
+                  className="site-option px-3.5 py-2 text-[13px] font-medium text-[var(--site-ink-soft)]"
                 >
-                  <span>{a.icon}</span>
                   {a.label}
                 </button>
               ))}
@@ -241,8 +226,8 @@ export default function ClinicChat({
       </div>
 
       {/* ── INPUT BAR ── */}
-      <div className="flex-shrink-0 bg-white border-t border-slate-100 px-4 py-3.5">
-        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 focus-within:border-blue-400 focus-within:bg-white transition-all shadow-sm">
+      <div className="flex-shrink-0 bg-white border-t border-[var(--site-line)] px-4 py-3.5">
+        <div className="flex items-center gap-2.5 bg-white border border-[var(--site-line)] rounded-[var(--site-r-btn)] px-4 py-2.5 focus-within:border-[var(--site-accent)] transition-colors">
           <input
             ref={inputRef}
             type="text"
@@ -251,17 +236,17 @@ export default function ClinicChat({
             onKeyDown={handleKeyDown}
             placeholder="Асуулт бичих..."
             disabled={loading}
-            className="flex-1 bg-transparent text-[14px] text-slate-800 placeholder:text-slate-400 outline-none disabled:opacity-50"
+            className="flex-1 bg-transparent text-[14px] text-[var(--site-ink)] placeholder:text-slate-400 outline-none disabled:opacity-50"
           />
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim()}
-            className="w-9 h-9 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all hover:shadow-md hover:shadow-blue-500/30 active:scale-90 flex-shrink-0"
+            className="w-9 h-9 rounded-[var(--site-r-btn)] bg-[var(--site-accent)] hover:bg-[var(--site-accent-hover)] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors shrink-0"
           >
             <Send className="w-4 h-4 text-white" />
           </button>
         </div>
-        <p className="text-center text-[10px] text-slate-300 mt-2">Powered by AI · {clinic.name}</p>
+        <p className="text-center text-[11px] text-[var(--site-muted)] mt-2">Powered by AI · {clinic.name}</p>
       </div>
     </div>
   );

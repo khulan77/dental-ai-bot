@@ -1,9 +1,10 @@
 'use client';
 
 import type { Service } from './types';
-import { Clock, ArrowUpRight } from 'lucide-react';
+import { Clock, ArrowRight, Sparkles, Smile, Stethoscope, Syringe, Gem, Activity } from 'lucide-react';
 
-const SERVICE_ICONS = ['🦷', '✨', '💎', '🪥', '😁', '🌟', '🩺', '💉'];
+// Emoji биш — бусад дүрстэй нэг стильд байхын тулд lucide
+const SERVICE_ICONS = [Stethoscope, Sparkles, Gem, Smile, Syringe, Activity];
 
 export default function Services({
   services,
@@ -15,66 +16,53 @@ export default function Services({
   if (services.length === 0) return null;
 
   return (
-    <section
-      className="bg-white py-24 sm:py-32 px-5 sm:px-8"
-      style={{ fontFamily: 'var(--font-jakarta, var(--font-sans))' }}
-    >
-      <div className="max-w-6xl mx-auto">
+    <section className="site-section site-section-soft">
+      <div className="site-container">
 
-        {/* Header */}
-        <div className="text-center max-w-xl mx-auto mb-16 premium-reveal-1">
-          <span className="inline-block text-[12px] font-bold text-blue-600 tracking-[0.2em] uppercase mb-4">
-            — Үйлчилгээнүүд —
-          </span>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight mb-4">
-            Бүх төрлийн{' '}
-            <span className="italic font-light text-blue-600" style={{ fontFamily: 'var(--font-serif)' }}>
-              эмчилгээ
-            </span>
-          </h2>
-          <p className="text-[15px] text-slate-500 leading-relaxed">
-            Орчин үеийн тоног төхөөрөмж, мэргэшсэн эмч нарын гараар хийгдэх бүх үйлчилгээ
+        <div className="text-center max-w-xl mx-auto mb-12">
+          <span className="site-eyebrow">Үйлчилгээ</span>
+          <h2 className="site-h2 mb-4">Манай үйлчилгээнүүд</h2>
+          <p className="site-lead">
+            Орчин үеийн тоног төхөөрөмж, мэргэшсэн эмч нарын гараар хийгдэх бүх төрлийн эмчилгээ.
           </p>
         </div>
 
-        {/* Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {services.map((service, idx) => (
-            <button
-              key={service.id}
-              onClick={() => onServiceClick(service)}
-              className="group text-left bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:-translate-y-1.5 hover:shadow-xl hover:border-blue-200 transition-all duration-300"
-            >
-              {/* Icon row */}
-              <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                  {SERVICE_ICONS[idx % SERVICE_ICONS.length]}
-                </div>
-                <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full">
-                  <Clock className="w-3 h-3 text-slate-400" />
-                  <span className="text-[11px] font-medium text-slate-500">{service.duration_minutes} мин</span>
-                </div>
-              </div>
-
-              {/* Name */}
-              <h3 className="text-[16px] font-bold text-slate-900 mb-2 leading-snug">
-                {service.name}
-              </h3>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <div>
-                  <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Үнэ</div>
-                  <div className="text-[20px] font-extrabold text-blue-600">
-                    ₮{service.price_mnt.toLocaleString()}
+          {services.map((service, idx) => {
+            const Icon = SERVICE_ICONS[idx % SERVICE_ICONS.length];
+            return (
+              <button
+                key={service.id}
+                onClick={() => onServiceClick(service)}
+                className="site-card site-card-hover text-left p-6 flex flex-col"
+              >
+                <div className="flex items-start justify-between mb-5">
+                  <div className="site-icon-tile">
+                    <Icon className="w-[18px] h-[18px]" />
                   </div>
+                  <span className="site-pill">
+                    <Clock className="w-3 h-3" />
+                    {service.duration_minutes} мин
+                  </span>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                  <ArrowUpRight className="w-4 h-4 text-blue-500 group-hover:text-white transition-colors" />
+
+                <h3 className="site-h3 mb-6">{service.name}</h3>
+
+                <div className="flex items-end justify-between mt-auto pt-5 border-t border-[var(--site-line)]">
+                  <div>
+                    <div className="text-[12px] text-[var(--site-muted)] mb-1">Үнэ</div>
+                    <div className="text-[18px] font-semibold text-[var(--site-ink)]">
+                      ₮{service.price_mnt.toLocaleString()}
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--site-accent)]">
+                    Цаг захиалах
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
       </div>

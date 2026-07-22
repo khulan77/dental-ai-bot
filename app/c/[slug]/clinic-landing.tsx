@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MessageCircle, X } from 'lucide-react';
 import ClinicChat from './clinic-chat';
 import Nav from './components/nav';
 import Hero from './components/hero';
@@ -46,13 +47,10 @@ export default function ClinicLanding({
       {!showChat && (
         <button
           onClick={openChat}
-          className="fixed bottom-6 right-6 z-40 group"
+          className="fixed bottom-6 right-6 z-40 w-13 h-13 p-3.5 rounded-full bg-[var(--site-accent)] hover:bg-[var(--site-accent-hover)] text-white shadow-lg transition-colors"
           aria-label="Чат нээх"
         >
-          <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-30"></div>
-          <div className="relative w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-2xl shadow-blue-900/40 hover:scale-110 active:scale-95 transition flex items-center justify-center text-2xl">
-            💬
-          </div>
+          <MessageCircle className="w-6 h-6" />
         </button>
       )}
 
@@ -83,14 +81,14 @@ export default function ClinicLanding({
 
       {/* Chat Modal */}
       {showChat && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-200">
-          <div className="relative w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 sm:p-4 animate-in fade-in duration-200">
+          <div className="relative w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] bg-white sm:rounded-[var(--site-r-card)] shadow-[0_24px_48px_rgba(15,23,42,0.18)] overflow-hidden flex flex-col">
             <button
               onClick={() => setShowChat(false)}
-              className="absolute top-3 right-3 z-10 w-10 h-10 bg-white/95 hover:bg-white text-stone-700 rounded-full shadow-lg flex items-center justify-center transition hover:rotate-90"
+              className="absolute top-3 right-3 z-10 w-10 h-10 bg-white hover:bg-[var(--site-bg-soft)] text-[var(--site-ink-soft)] rounded-full border border-[var(--site-line)] flex items-center justify-center transition-colors"
               aria-label="Хаах"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
             <ClinicChat key={chatMessage ?? '__open__'} clinic={clinic} initialMessage={chatMessage} />
           </div>
