@@ -1,4 +1,5 @@
 import type { ActivityItem } from '@/lib/dashboard/stats';
+import { clinicShortDate } from '@/lib/booking/timezone';
 
 export default function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
@@ -56,5 +57,5 @@ function formatRelativeTime(timestamp: string): string {
   if (diffMins < 60) return `${diffMins} минутын өмнө`;
   if (diffHours < 24) return `${diffHours} цагийн өмнө`;
   if (diffDays < 7) return `${diffDays} өдрийн өмнө`;
-  return then.toLocaleDateString('mn-MN');
+  return clinicShortDate(then);
 }

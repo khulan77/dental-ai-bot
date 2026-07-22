@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDoctorDaySchedule } from '@/lib/booking/slots';
+import { clinicInstantFrom } from '@/lib/booking/timezone';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +12,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 });
   }
 
-  const date = new Date(dateStr + 'T00:00:00');
+  // 'YYYY-MM-DD'-ийг эмнэлгийн бүсийн өдөр гэж үзнэ.
+  // new Date(str + 'T00:00:00') нь серверийн бүсээр задалдаг тул
+  // Vercel (UTC) дээр өдөр гулсах эрсдэлтэй байсан.
+  const date = clinicInstantFrom(dateStr, '12:00');
   const schedule = await getDoctorDaySchedule(clinicId, doctorId, date);
 
   return NextResponse.json({

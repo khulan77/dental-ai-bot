@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { notFound } from 'next/navigation';
+import { clinicDateTimeLabel } from '@/lib/booking/timezone';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -262,13 +263,7 @@ export default function TestChatPage() {
                   <BookingField label="Үйлчилгээ" value={booking.service} />
                   <BookingField
                     label="Огноо"
-                    value={new Date(booking.scheduled_at).toLocaleString('mn-MN', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    value={clinicDateTimeLabel(new Date(booking.scheduled_at))}
                   />
                   {booking.doctor_name && (
                     <div className="col-span-2">

@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/db/supabase';
 import { getCurrentClinic } from '@/lib/db/supabase-server';
 import { getWeekSchedule, getDoctorWeekSchedule } from '@/lib/booking/slots';
+import { clinicDayBounds } from '@/lib/booking/timezone';
 import CalendarView from './calendar-view';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +18,8 @@ async function getData(searchParams: { doctor?: string }) {
     .eq('is_active', true)
     .order('display_order');
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Эмнэлгийн бүсээр өнөөдрийн эхлэл — серверийн бүсээр биш
+  const today = clinicDayBounds(new Date()).start;
 
   const selectedDoctorId = searchParams.doctor ?? 'all';
 

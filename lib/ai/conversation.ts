@@ -2,6 +2,7 @@ import { openai, AI_MODEL } from './client';
 import type { Clinic, Message } from '@/types/database';
 import { findCachedReply, cacheReply } from './cache';
 import { getAvailableSlotsForBot } from '@/lib/booking/slots';
+import { addClinicDays, clinicDateISO } from '@/lib/booking/timezone';
 import { createAdminClient } from '@/lib/db/supabase';
 
 export type BookingData = {
@@ -29,16 +30,12 @@ function buildSystemPrompt(clinic: Clinic): string {
     })
     .join('\n');
 
+  // Ботод хэлж буй огноо нь эмнэлгийн бүсээр байх ёстой.
+  // UTC-ээр бол УБ-ын 00:00-08:00-д "өнөөдөр" нь өчигдөр болно.
   const now = new Date();
-  const todayISO = now.toISOString().split('T')[0];
-
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowISO = tomorrow.toISOString().split('T')[0];
-
-  const dayAfter = new Date(now);
-  dayAfter.setDate(dayAfter.getDate() + 2);
-  const dayAfterISO = dayAfter.toISOString().split('T')[0];
+  const todayISO = clinicDateISO(now);
+  const tomorrowISO = clinicDateISO(addClinicDays(now, 1));
+  const dayAfterISO = clinicDateISO(addClinicDays(now, 2));
 
   // Клиникийн мэдээллийг нэгтгэх (хоосон field-үүдийг алгасна)
   const clinicInfo = [
@@ -133,9 +130,9 @@ export async function generateReply(
       .eq('clinic_id', clinic.id)
       .eq('is_active', true)
       .order('display_order'),
-    getAvailableSlotsForBot(clinic.id, (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })()),
-    getAvailableSlotsForBot(clinic.id, (() => { const d = new Date(); d.setDate(d.getDate() + 2); return d; })()),
-    getAvailableSlotsForBot(clinic.id, (() => { const d = new Date(); d.setDate(d.getDate() + 3); return d; })()),
+    getAvailableSlotsForBot(clinic.id, addClinicDays(new Date(), 1)),
+    getAvailableSlotsForBot(clinic.id, addClinicDays(new Date(), 2)),
+    getAvailableSlotsForBot(clinic.id, addClinicDays(new Date(), 3)),
   ]);
 
   if (doctors && doctors.length > 0) {
