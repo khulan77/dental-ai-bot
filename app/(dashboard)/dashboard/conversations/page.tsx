@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/db/supabase';
+import { clinicDateTimeLabel } from '@/lib/booking/timezone';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +80,7 @@ export default async function ConversationsPage() {
                         {lastMessage?.content ?? 'Мессеж байхгүй'}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {time.toLocaleString('mn-MN')} • {messages.length} мессеж
+                        {clinicDateTimeLabel(time)} • {messages.length} мессеж
                       </p>
                     </div>
                   </div>

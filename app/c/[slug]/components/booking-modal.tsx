@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 import { X, Calendar, Clock, User, Phone } from 'lucide-react';
 import type { Doctor, Service } from './types';
+import {
+  addClinicDays,
+  clinicDateISO,
+  clinicDayIndex,
+  clinicInstantFrom,
+} from '@/lib/booking/timezone';
 
 type Props = {
   doctor: Doctor;
@@ -24,13 +30,13 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
   const preselected =
     (initialService && doctorServices.find(s => s.id === initialService.id)) ?? doctorServices[0] ?? null;
 
+  // Огноог эмнэлгийн бүсээр — хэрэглэгчийн төхөөрөмжийн бүсээр биш
   const dates = Array.from({ length: 3 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
+    const d = addClinicDays(new Date(), i);
     return {
-      iso: d.toISOString().split('T')[0],
+      iso: clinicDateISO(d),
       label: i === 0 ? 'Өнөөдөр' : i === 1 ? 'Маргааш' : 'Нөгөөдөр',
-      dayName: DAY_NAMES[d.getDay()],
+      dayName: DAY_NAMES[clinicDayIndex(d)],
     };
   });
 
@@ -71,7 +77,8 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         service: selectedService.name,
-        scheduledAt: `${selectedDate}T${selectedTime}:00+08:00`,
+        // Сонгосон цаг нь эмнэлгийн ханан дээрх цаг — offset-ийг гараар бичихгүй
+        scheduledAt: clinicInstantFrom(selectedDate, selectedTime).toISOString(),
       }),
     });
     const data = await res.json();

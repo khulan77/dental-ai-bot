@@ -1,18 +1,7 @@
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/db/supabase';
+import { CLINIC_TIMEZONE } from '@/lib/booking/timezone';
 
-/**
- * Шинэ цаг захиалга бүртгэгдэхэд эмнэлгийн эзэн болон харьяалах эмч рүү
- * мэдэгдэл илгээнэ.
- *
- * Энэ функц хэзээ ч алдаа шиддэггүй — имэйл илгээж чадаагүй нь цаг
- * захиалгыг унагаах шалтгаан биш. Дуудагч тал үүнийг Next.js-ийн after()
- * дотроос дуудна (хариу буцаасны дараа ажиллана).
- */
-
-// Эмнэлгүүд Монголд байгаа тул цагийг үргэлж УБ-ын цагаар харуулна.
-// Серверийн локал цагийн бүсээс хамаарахгүй (Vercel дээр UTC байдаг).
-const CLINIC_TIMEZONE = 'Asia/Ulaanbaatar';
 
 export type BookingNotification = {
   clinicName: string;
@@ -24,7 +13,6 @@ export type BookingNotification = {
   customerPhone: string | null;
   service: string | null;
   scheduledAt: string;
-  /** Захиалга хаанаас ирсэн — имэйлд эх сурвалжийг харуулна */
   source: 'web' | 'chat' | 'instagram' | 'messenger';
 };
 
@@ -92,12 +80,7 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/**
- * Захиалгын id-нуудаас мэдэгдэлд хэрэгтэй мэдээллийг татаж имэйл илгээнэ.
- *
- * Route handler-ууд үүнийг after() дотроос дууддаг тул DB хайлт нь ч
- * хариу буцаасны дараа ажиллана — захиалгын хурдад нөлөөлөхгүй.
- */
+
 export async function notifyNewBooking(input: {
   clinicId: string;
   doctorId: string | null;
@@ -154,7 +137,6 @@ export async function sendBookingNotification(b: BookingNotification): Promise<v
     return;
   }
 
-  // Эзэн + эмч. Хоёулаа нэг хаягтай бол давхардуулж илгээхгүй.
   const recipients = [...new Set([b.ownerEmail, b.doctorEmail].filter(Boolean))] as string[];
 
   if (recipients.length === 0) {
@@ -177,7 +159,6 @@ export async function sendBookingNotification(b: BookingNotification): Promise<v
       console.error('Мэдэгдэл илгээхэд алдаа:', error);
     }
   } catch (e) {
-    // Имэйл унасан ч цаг захиалга хүчинтэй хэвээр
     console.error('Мэдэгдэл илгээхэд алдаа:', e);
   }
 }

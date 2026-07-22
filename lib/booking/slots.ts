@@ -1,5 +1,13 @@
 import { createAdminClient } from '@/lib/db/supabase';
 import type { BusinessHoursData } from '@/lib/db/clinic-actions';
+import {
+  addClinicDays,
+  clinicDateISO,
+  clinicDayBounds,
+  clinicDayIndex,
+  clinicHHMM,
+  clinicMinutesOfDay,
+} from './timezone';
 
 export type TimeSlot = {
   start: string;
@@ -44,18 +52,16 @@ export async function isSlotAvailable(
   const start = new Date(scheduledAt);
   const end = new Date(start.getTime() + durationMinutes * 60_000);
 
-  // Тухайн өдрийн боломжит давхцах захиалгуудыг татах
-  const dayStart = new Date(start);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(start);
-  dayEnd.setHours(23, 59, 59, 999);
+  // Тухайн өдрийн боломжит давхцах захиалгуудыг татах.
+  // Өдрийн хилийг эмнэлгийн бүсээр тооцно — серверийн бүсээр биш.
+  const { start: dayStart, end: dayEnd } = clinicDayBounds(start);
 
   let query = supabase
     .from('appointments')
     .select('scheduled_at, duration_minutes')
     .eq('clinic_id', clinicId)
     .gte('scheduled_at', dayStart.toISOString())
-    .lte('scheduled_at', dayEnd.toISOString())
+    .lt('scheduled_at', dayEnd.toISOString())
     .in('status', ['confirmed', 'reminded']);
 
   if (doctorId) {
@@ -90,9 +96,10 @@ export async function getDoctorDaySchedule(
     supabase.from('clinics').select('business_hours').eq('id', clinicId).single(),
   ]);
 
-  const dayKey = DAY_KEYS[date.getDay()];
-  const dayName = DAY_NAMES_MN[date.getDay()];
-  const dateISO = date.toISOString().split('T')[0];
+  const dayIndex = clinicDayIndex(date);
+  const dayKey = DAY_KEYS[dayIndex];
+  const dayName = DAY_NAMES_MN[dayIndex];
+  const dateISO = clinicDateISO(date);
 
   if (!doctor) {
     return { date: dateISO, dayName, isOpen: false, slots: [] };
@@ -114,10 +121,7 @@ export async function getDoctorDaySchedule(
   }
 
   // Тухайн өдрийн booking-уудыг доктороор
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
+  const { start: dayStart, end: dayEnd } = clinicDayBounds(date);
 
   const { data: appointments } = await supabase
     .from('appointments')
@@ -125,16 +129,16 @@ export async function getDoctorDaySchedule(
     .eq('clinic_id', clinicId)
     .eq('doctor_id', doctorId)
     .gte('scheduled_at', dayStart.toISOString())
-    .lte('scheduled_at', dayEnd.toISOString())
+    .lt('scheduled_at', dayEnd.toISOString())
     .in('status', ['confirmed', 'reminded']);
 
-  const slots = generateSlots(date, dayHours.open, dayHours.close);
+  const slots = generateSlots(dateISO, dayHours.open, dayHours.close);
 
   const bookedSlots = new Map<string, { id: string; name: string }>();
 
   (appointments ?? []).forEach(apt => {
-    const aptDate = new Date(apt.scheduled_at);
-    const aptTime = `${aptDate.getHours().toString().padStart(2, '0')}:${aptDate.getMinutes().toString().padStart(2, '0')}`;
+    // Захиалгын цагийг эмнэлгийн бүсээр — эс бөгөөс slot түлхүүр таарахгүй
+    const aptTime = clinicHHMM(new Date(apt.scheduled_at));
 
     const duration = apt.duration_minutes ?? SLOT_DURATION_MINUTES;
     const slotCount = Math.ceil(duration / SLOT_DURATION_MINUTES);
@@ -182,9 +186,9 @@ export async function getDoctorWeekSchedule(
   const schedules: DaySchedule[] = [];
 
   for (let i = 0; i < days; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    schedules.push(await getDoctorDaySchedule(clinicId, doctorId, date));
+    schedules.push(
+      await getDoctorDaySchedule(clinicId, doctorId, addClinicDays(startDate, i))
+    );
   }
 
   return schedules;
@@ -255,8 +259,8 @@ export async function getAvailableSlotsForBot(
   date: Date,
   serviceId: string | null = null
 ): Promise<string> {
-  const dayName = DAY_NAMES_MN[date.getDay()];
-  const dateISO = date.toISOString().split('T')[0];
+  const dayName = DAY_NAMES_MN[clinicDayIndex(date)];
+  const dateISO = clinicDateISO(date);
 
   const availableDoctors = await getAvailableDoctorsForDate(clinicId, date, serviceId);
 
@@ -284,7 +288,7 @@ export async function getAvailableSlotsForBot(
 /**
  * Slot list үүсгэх
  */
-function generateSlots(date: Date, openTime: string, closeTime: string): TimeSlot[] {
+function generateSlots(dateISO: string, openTime: string, closeTime: string): TimeSlot[] {
   const slots: TimeSlot[] = [];
   const [openHour, openMin] = openTime.split(':').map(Number);
   const [closeHour, closeMin] = closeTime.split(':').map(Number);
@@ -292,9 +296,10 @@ function generateSlots(date: Date, openTime: string, closeTime: string): TimeSlo
   const openMinutes = openHour * 60 + openMin;
   const closeMinutes = closeHour * 60 + closeMin;
 
+  // "Өнөөдөр мөн үү" болон "одоо хэдэн цаг вэ" хоёрыг эмнэлгийн бүсээр
   const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const isToday = clinicDateISO(now) === dateISO;
+  const currentMinutes = clinicMinutesOfDay(now);
 
   for (let mins = openMinutes; mins < closeMinutes; mins += SLOT_DURATION_MINUTES) {
     const start = formatTime(mins);
@@ -328,35 +333,33 @@ export async function getDaySchedule(clinicId: string, date: Date): Promise<DayS
     .single();
 
   const businessHours = clinic?.business_hours as BusinessHoursData;
-  const dayKey = DAY_KEYS[date.getDay()];
-  const dayName = DAY_NAMES_MN[date.getDay()];
+  const dayIndex = clinicDayIndex(date);
+  const dayKey = DAY_KEYS[dayIndex];
+  const dayName = DAY_NAMES_MN[dayIndex];
   const dayHours = businessHours?.[dayKey];
 
-  const dateISO = date.toISOString().split('T')[0];
+  const dateISO = clinicDateISO(date);
 
   if (!dayHours) {
     return { date: dateISO, dayName, isOpen: false, slots: [] };
   }
 
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
+  const { start: dayStart, end: dayEnd } = clinicDayBounds(date);
 
   const { data: appointments } = await supabase
     .from('appointments')
     .select('id, scheduled_at, duration_minutes, customer_name, status')
     .eq('clinic_id', clinicId)
     .gte('scheduled_at', dayStart.toISOString())
-    .lte('scheduled_at', dayEnd.toISOString())
+    .lt('scheduled_at', dayEnd.toISOString())
     .in('status', ['confirmed', 'reminded']);
 
-  const slots = generateSlots(date, dayHours.open, dayHours.close);
+  const slots = generateSlots(dateISO, dayHours.open, dayHours.close);
 
   const bookedSlots = new Map<string, { id: string; name: string }>();
   (appointments ?? []).forEach(apt => {
-    const aptDate = new Date(apt.scheduled_at);
-    const aptTime = `${aptDate.getHours().toString().padStart(2, '0')}:${aptDate.getMinutes().toString().padStart(2, '0')}`;
+    // Захиалгын цагийг эмнэлгийн бүсээр — эс бөгөөс slot түлхүүр таарахгүй
+    const aptTime = clinicHHMM(new Date(apt.scheduled_at));
     const duration = apt.duration_minutes ?? SLOT_DURATION_MINUTES;
     const slotCount = Math.ceil(duration / SLOT_DURATION_MINUTES);
     const startIdx = slots.findIndex(s => s.start === aptTime);
@@ -390,9 +393,7 @@ export async function getWeekSchedule(
 ): Promise<DaySchedule[]> {
   const schedules: DaySchedule[] = [];
   for (let i = 0; i < days; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    schedules.push(await getDaySchedule(clinicId, date));
+    schedules.push(await getDaySchedule(clinicId, addClinicDays(startDate, i)));
   }
   return schedules;
 }

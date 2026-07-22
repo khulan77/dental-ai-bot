@@ -1,4 +1,10 @@
 import { createAdminClient } from '@/lib/db/supabase';
+import {
+  addClinicDays,
+  clinicDateISO,
+  clinicDayBounds,
+  clinicDayIndex,
+} from '@/lib/booking/timezone';
 
 export type DashboardStats = {
   // Today
@@ -26,20 +32,14 @@ export async function getDashboardStats(clinicId: string): Promise<DashboardStat
   const supabase = createAdminClient();
 
   const now = new Date();
-  
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(todayStart);
-  todayEnd.setDate(todayEnd.getDate() + 1);
 
-  const yesterdayStart = new Date(todayStart);
-  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  // "Өнөөдөр" гэдгийг эмнэлгийн бүсээр тооцно — серверийн бүс (Vercel дээр UTC)
+  // өөр байвал өдрийн статистик 8 цагаар гулсана.
+  const { start: todayStart, end: todayEnd } = clinicDayBounds(now);
 
-  const weekStart = new Date(todayStart);
-  weekStart.setDate(weekStart.getDate() - 7);
-
-  const twoWeeksAgo = new Date(weekStart);
-  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 7);
+  const yesterdayStart = addClinicDays(todayStart, -1);
+  const weekStart = addClinicDays(todayStart, -7);
+  const twoWeeksAgo = addClinicDays(weekStart, -7);
 
   // Бүгдийг параллел татах
   const [
@@ -140,11 +140,8 @@ export type DailyStat = {
 export async function getWeeklyTrend(clinicId: string): Promise<DailyStat[]> {
   const supabase = createAdminClient();
 
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - 6); // 7 хоног (өнөөдөр оруулаад)
+  const todayStart = clinicDayBounds(new Date()).start;
+  const weekStart = addClinicDays(todayStart, -6); // 7 хоног (өнөөдөр оруулаад)
 
   const { data: appointments } = await supabase
     .from('appointments')
@@ -169,15 +166,14 @@ export async function getWeeklyTrend(clinicId: string): Promise<DailyStat[]> {
   const result: DailyStat[] = [];
 
   for (let i = 0; i < 7; i++) {
-    const date = new Date(weekStart);
-    date.setDate(date.getDate() + i);
-    const dateISO = date.toISOString().split('T')[0];
-    const label = dayLabels[date.getDay()];
+    const date = addClinicDays(weekStart, i);
+    const dateISO = clinicDateISO(date);
+    const label = dayLabels[clinicDayIndex(date)];
 
-    const dayApts = (appointments ?? []).filter(apt => {
-      const aptDate = new Date(apt.scheduled_at);
-      return aptDate.toISOString().split('T')[0] === dateISO;
-    });
+    // Захиалгыг эмнэлгийн бүсийн өдрөөр бүлэглэнэ
+    const dayApts = (appointments ?? []).filter(
+      apt => clinicDateISO(new Date(apt.scheduled_at)) === dateISO
+    );
 
     const revenue = dayApts.reduce((sum, apt) => {
       return sum + (apt.service ? (servicePrices.get(apt.service) ?? 0) : 0);
@@ -408,10 +404,8 @@ export async function getDoctorStats(clinicId: string): Promise<DoctorStat[]> {
   }>;
   services.forEach(s => servicePrices.set(s.name, s.price_mnt));
 
-  // 7 хоногийн өмнөх огноо
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  weekAgo.setHours(0, 0, 0, 0);
+  // 7 хоногийн өмнөх өдрийн эхлэл (эмнэлгийн бүсээр)
+  const weekAgo = addClinicDays(clinicDayBounds(new Date()).start, -7);
 
   // Эмч тус бүрээр аналитик
   const stats: DoctorStat[] = doctors.map(doctor => {

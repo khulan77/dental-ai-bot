@@ -14,6 +14,7 @@ import ActivityFeed from "./activity-feed";
 import DoctorStats from "./doctor-stats";
 import OnboardingChecklist from "./onboarding-checklist";
 import { getCurrentClinic, getCurrentUser } from "@/lib/db/supabase-server";
+import { clinicHour, clinicLongDate } from "@/lib/booking/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export default async function DashboardPage() {
     ]);
 
   const now = new Date();
-  const greeting = getGreeting(now.getHours());
+  const greeting = getGreeting(clinicHour(now));
   const todayChange = stats.todayCount - stats.yesterdayCount;
   const weekChange = stats.weekCount - stats.lastWeekCount;
 
@@ -75,11 +76,7 @@ export default async function DashboardPage() {
         <div className="text-right">
           <p className="text-sm text-slate-400">Өнөөдөр</p>
           <p className="text-lg font-semibold text-slate-700">
-            {now.toLocaleDateString("mn-MN", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {clinicLongDate(now)}
           </p>
         </div>
       </div>

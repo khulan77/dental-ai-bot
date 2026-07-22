@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/db/supabase";
+import { clinicShortDate, clinicTimeLabel } from "@/lib/booking/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -78,11 +79,7 @@ export default async function AppointmentsPage() {
                   <div className="flex items-center justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
                     <span>{apt.service ?? "—"}</span>
                     <span>
-                      {date.toLocaleDateString("mn-MN")}{" "}
-                      {date.toLocaleTimeString("mn-MN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {clinicShortDate(date)} {clinicTimeLabel(date)}
                     </span>
                   </div>
                 </div>
@@ -133,13 +130,8 @@ export default async function AppointmentsPage() {
                         {apt.service ?? "—"}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <div>{date.toLocaleDateString("mn-MN")}</div>
-                        <div className="text-gray-500">
-                          {date.toLocaleTimeString("mn-MN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
+                        <div>{clinicShortDate(date)}</div>
+                        <div className="text-gray-500">{clinicTimeLabel(date)}</div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {apt.customer_phone ?? "—"}

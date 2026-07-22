@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DaySchedule, TimeSlot } from '@/lib/booking/slots';
+import { clinicDateISOLabel } from '@/lib/booking/timezone';
 
 type Doctor = {
   id: string;
@@ -102,11 +103,7 @@ export default function CalendarView({
         <div className="flex items-baseline justify-between mb-5 flex-wrap gap-2">
           <div>
             <h2 className="text-xl font-bold">
-              {new Date(selectedDay.date).toLocaleDateString('mn-MN', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {clinicDateISOLabel(selectedDay.date)}
             </h2>
             {selectedDay.isOpen && (
               <p className="text-sm text-slate-500 mt-1">
