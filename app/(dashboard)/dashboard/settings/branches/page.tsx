@@ -1,42 +1,48 @@
+import { createAdminClient } from '@/lib/db/supabase';
 import { getCurrentClinic } from '@/lib/db/supabase-server';
-import ServicesManager from './services-manager';
+import BranchesManager from './branches-manager';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-async function getClinic() {
-  return await getCurrentClinic();
+async function getData() {
+  const clinic = await getCurrentClinic();
+  if (!clinic) return null;
+
+  const supabase = createAdminClient();
+  const { data: branches } = await supabase
+    .from('branches')
+    .select('id, name, address, phone, business_hours, display_order, is_active')
+    .eq('clinic_id', clinic.id)
+    .order('display_order', { ascending: true });
+
+  return { clinic, branches: branches ?? [] };
 }
 
-export default async function ServicesPage() {
-  const clinic = await getClinic();
-
-  if (!clinic) {
-    return <div>Клиник олдсонгүй</div>;
-  }
+export default async function BranchesPage() {
+  const data = await getData();
+  if (!data) return <div>Клиник олдсонгүй</div>;
 
   return (
     <div className="max-w-4xl space-y-6 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold">Тохиргоо</h1>
-        <p className="text-slate-500 mt-1">
-          Үйлчилгээ ба үнийн жагсаалт
-        </p>
+        <p className="text-slate-500 mt-1">Салбарууд (олон хаяг)</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         <TabLink href="/dashboard/settings">Үндсэн</TabLink>
-        <TabLink href="/dashboard/settings/branches">Салбар</TabLink>
-        <TabLink href="/dashboard/settings/services" active>
-          Үйлчилгээ
-        </TabLink>
+        <TabLink href="/dashboard/settings/branches" active>Салбар</TabLink>
+        <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
         <TabLink href="/dashboard/settings/doctors">Эмч нар</TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
         <TabLink href="/dashboard/settings/instagram">Instagram</TabLink>
       </div>
 
-      <ServicesManager initialServices={clinic.services ?? []} />
+      <BranchesManager
+        clinicHours={data.clinic.business_hours}
+        initialBranches={data.branches}
+      />
     </div>
   );
 }

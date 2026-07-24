@@ -8,6 +8,8 @@ type Service = {
   name: string;
 };
 
+type BranchOption = { id: string; name: string };
+
 type DoctorFormData = {
   name: string;
   specialty: string;
@@ -15,6 +17,7 @@ type DoctorFormData = {
   bio: string;
   service_ids: string[];
   custom_hours: BusinessHoursData | null;
+  branch_ids: string[];
 };
 
 const DAYS: { key: keyof BusinessHoursData; label: string }[] = [
@@ -39,6 +42,7 @@ const TIME_OPTIONS = (() => {
 export default function DoctorForm({
   initialData,
   services,
+  branches = [],
   clinicHours,
   onCancel,
   onSubmit,
@@ -52,8 +56,10 @@ export default function DoctorForm({
     bio: string | null;
     service_ids: string[];
     custom_hours: BusinessHoursData | null;
+    branch_ids?: string[];
   };
   services: Service[];
+  branches?: BranchOption[];
   clinicHours: BusinessHoursData;
   onCancel: () => void;
   onSubmit: (data: DoctorFormData) => void;
@@ -64,6 +70,9 @@ export default function DoctorForm({
   const [specialty, setSpecialty] = useState(initialData?.specialty ?? '');
   const [email, setEmail] = useState(initialData?.email ?? '');
   const [bio, setBio] = useState(initialData?.bio ?? '');
+  const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>(
+    initialData?.branch_ids ?? []
+  );
   const [allServices, setAllServices] = useState(
     initialData?.service_ids.length === 0 || !initialData
   );
@@ -82,6 +91,14 @@ export default function DoctorForm({
       prev.includes(serviceId)
         ? prev.filter(id => id !== serviceId)
         : [...prev, serviceId]
+    );
+  }
+
+  function toggleBranch(branchId: string) {
+    setSelectedBranchIds(prev =>
+      prev.includes(branchId)
+        ? prev.filter(id => id !== branchId)
+        : [...prev, branchId]
     );
   }
 
@@ -109,6 +126,7 @@ export default function DoctorForm({
       bio: bio.trim(),
       service_ids: allServices ? [] : selectedServiceIds,
       custom_hours: useCustomHours ? customHours : null,
+      branch_ids: selectedBranchIds,
     });
   }
 
@@ -169,6 +187,33 @@ export default function DoctorForm({
           />
         </div>
       </div>
+
+      {/* Салбар — олон салбартай эмнэлэгт л харагдана */}
+      {branches.length > 0 && (
+        <div className="bg-white rounded-lg border border-slate-200 p-3">
+          <p className="text-xs font-medium text-slate-700 mb-2">Ажилладаг салбар</p>
+          <p className="text-[11px] text-slate-400 mb-2">
+            Энэ эмч аль салбарт цаг авах боломжтойг сонго. Хоосон бол салбарын
+            жагсаалтад харагдахгүй.
+          </p>
+          <div className="space-y-1">
+            {branches.map(branch => (
+              <label
+                key={branch.id}
+                className="flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-slate-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBranchIds.includes(branch.id)}
+                  onChange={() => toggleBranch(branch.id)}
+                  className="rounded text-blue-600"
+                />
+                <span className="text-sm">{branch.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Үйлчилгээ */}
       <div className="bg-white rounded-lg border border-slate-200 p-3">

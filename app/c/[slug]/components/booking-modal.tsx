@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, Check } from 'lucide-react';
-import type { Doctor, Service } from './types';
+import { X, Calendar, Clock, User, Phone, Check, MapPin } from 'lucide-react';
+import type { Doctor, Service, Branch } from './types';
 import {
   addClinicDays,
   clinicDateISO,
@@ -14,17 +14,21 @@ type Props = {
   doctor: Doctor;
   clinicId: string;
   services: Service[];
+  branches?: Branch[];
   initialService?: Service | null;
   onClose: () => void;
 };
 
 const DAY_NAMES = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
 
-export default function BookingModal({ doctor, clinicId, services, initialService, onClose }: Props) {
+export default function BookingModal({ doctor, clinicId, services, branches = [], initialService, onClose }: Props) {
   const doctorServices =
     doctor.service_ids && doctor.service_ids.length > 0
       ? services.filter(s => doctor.service_ids!.includes(s.id))
       : services;
+
+  // Энэ эмч ажилладаг салбарууд. Салбаргүй эмнэлэгт хоосон → салбар сонгохгүй.
+  const doctorBranches = branches.filter(b => doctor.branch_ids?.includes(b.id));
 
   // Үйлчилгээнээс дамжиж ирсэн бол түүнийг урьдчилан сонгоно
   const preselected =
@@ -41,6 +45,7 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
   });
 
   const [selectedService, setSelectedService] = useState<Service | null>(preselected);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(doctorBranches[0]?.id ?? '');
   const [selectedDate, setSelectedDate] = useState<string>(dates[1].iso);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [slots, setSlots] = useState<string[]>([]);
@@ -55,15 +60,22 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
     setLoadingSlots(true);
     setSelectedTime('');
     setSlots([]);
-    fetch(`/api/slots?clinicId=${clinicId}&doctorId=${doctor.id}&date=${selectedDate}`)
+    // Салбар сонгосон бол тухайн салбарын ажлын цагаар slot гаргана
+    const branchParam = selectedBranchId ? `&branchId=${selectedBranchId}` : '';
+    fetch(`/api/slots?clinicId=${clinicId}&doctorId=${doctor.id}&date=${selectedDate}${branchParam}`)
       .then(r => r.json())
       .then(data => { setSlots(data.slots ?? []); setLoadingSlots(false); })
       .catch(() => setLoadingSlots(false));
-  }, [selectedDate, clinicId, doctor.id]);
+  }, [selectedDate, selectedBranchId, clinicId, doctor.id]);
 
   async function handleSubmit() {
     if (!selectedService || !selectedDate || !selectedTime || !customerName.trim() || !customerPhone.trim()) {
       setError('Бүх талбарыг бөглөнө үү');
+      return;
+    }
+    // Салбартай бол салбараа заавал сонгосон байх ёстой
+    if (doctorBranches.length > 0 && !selectedBranchId) {
+      setError('Салбараа сонгоно уу');
       return;
     }
     setLoading(true);
@@ -74,6 +86,7 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
       body: JSON.stringify({
         clinicId,
         doctorId: doctor.id,
+        branchId: selectedBranchId || null,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         service: selectedService.name,
@@ -102,6 +115,9 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
           <div className="rounded-[var(--site-r-btn)] border border-[var(--site-line)] divide-y divide-[var(--site-line)] text-left mb-6">
             {[
               ['Эмч', doctor.name],
+              ...(selectedBranchId
+                ? [['Салбар', doctorBranches.find(b => b.id === selectedBranchId)?.name ?? '—']]
+                : []),
               ['Үйлчилгээ', selectedService?.name ?? '—'],
               ['Цаг', `${selectedDate} ${selectedTime}`],
               ['Нэр', customerName],
@@ -148,6 +164,30 @@ export default function BookingModal({ doctor, clinicId, services, initialServic
 
         {/* Гүйдэг хэсэг */}
         <div className="overflow-y-auto flex-1 p-5 space-y-6">
+
+          {/* Салбар — олон салбартай эмнэлэгт л харагдана */}
+          {doctorBranches.length > 0 && (
+            <div>
+              <p className="site-label">
+                <MapPin className="w-3.5 h-3.5" /> Салбар
+              </p>
+              <div className="space-y-2">
+                {doctorBranches.map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBranchId(b.id)}
+                    aria-pressed={selectedBranchId === b.id}
+                    className="site-option w-full flex flex-col items-start p-3.5"
+                  >
+                    <span className="text-[14px] font-medium text-[var(--site-ink)]">{b.name}</span>
+                    {b.address && (
+                      <span className="text-[13px] text-[var(--site-muted)] mt-0.5">{b.address}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Үйлчилгээ */}
           <div>

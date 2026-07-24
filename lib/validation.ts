@@ -31,6 +31,7 @@ export const chatSchema = z.object({
 export const bookSchema = z.object({
   clinicId: z.string().uuid('clinicId буруу байна'),
   doctorId: z.string().uuid().optional().nullable(),
+  branchId: z.string().uuid().optional().nullable(),
   customerName: z.string().trim().min(1, 'Нэр шаардлагатай').max(100),
   customerPhone: phoneSchema,
   service: z.string().trim().min(1, 'Үйлчилгээ шаардлагатай').max(100),

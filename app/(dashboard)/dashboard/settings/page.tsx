@@ -29,6 +29,9 @@ export default async function SettingsPage() {
         <TabLink href="/dashboard/settings" active>
           Үндсэн
         </TabLink>
+        <TabLink href="/dashboard/settings/branches">
+          Салбар
+        </TabLink>
         <TabLink href="/dashboard/settings/services">
           Үйлчилгээ
         </TabLink>

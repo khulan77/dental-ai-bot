@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/db/supabase';
 import { getCurrentClinic } from '@/lib/db/supabase-server';
+import { getDoctorBranchMap } from '@/lib/booking/branches';
 import DoctorsManager from './doctors-manager';
 import Link from 'next/link';
 
@@ -10,13 +11,28 @@ async function getData() {
   if (!clinic) return null;
 
   const supabase = createAdminClient();
-  const { data: doctors } = await supabase
-    .from('doctors')
-    .select('*')
-    .eq('clinic_id', clinic.id)
-    .order('display_order', { ascending: true });
+  const [{ data: doctorRows }, { data: branches }] = await Promise.all([
+    supabase
+      .from('doctors')
+      .select('*')
+      .eq('clinic_id', clinic.id)
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('branches')
+      .select('id, name')
+      .eq('clinic_id', clinic.id)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true }),
+  ]);
 
-  return { clinic, doctors: doctors ?? [] };
+  const doctors = doctorRows ?? [];
+  const branchMap = await getDoctorBranchMap(doctors.map(d => d.id));
+  const doctorsWithBranches = doctors.map(d => ({
+    ...d,
+    branch_ids: branchMap[d.id] ?? [],
+  }));
+
+  return { clinic, doctors: doctorsWithBranches, branches: branches ?? [] };
 }
 
 export default async function DoctorsPage() {
@@ -32,6 +48,7 @@ export default async function DoctorsPage() {
 
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         <TabLink href="/dashboard/settings">Үндсэн</TabLink>
+        <TabLink href="/dashboard/settings/branches">Салбар</TabLink>
         <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
         <TabLink href="/dashboard/settings/doctors" active>
           Эмч нар
@@ -42,6 +59,7 @@ export default async function DoctorsPage() {
 
       <DoctorsManager
         services={data.clinic.services ?? []}
+        branches={data.branches}
         clinicHours={data.clinic.business_hours}
         initialDoctors={data.doctors}
       />

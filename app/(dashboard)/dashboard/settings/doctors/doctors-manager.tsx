@@ -12,6 +12,8 @@ type Service = {
   duration_minutes: number;
 };
 
+type BranchOption = { id: string; name: string };
+
 type Doctor = {
   id: string;
   name: string;
@@ -20,14 +22,17 @@ type Doctor = {
   bio: string | null;
   service_ids: string[];
   custom_hours: BusinessHoursData | null;
+  branch_ids: string[];
 };
 
 export default function DoctorsManager({
   services,
+  branches,
   clinicHours,
   initialDoctors,
 }: {
   services: Service[];
+  branches: BranchOption[];
   clinicHours: BusinessHoursData;
   initialDoctors: Doctor[];
 }) {
@@ -47,7 +52,8 @@ export default function DoctorsManager({
     const result = await addDoctor(data);
 
     if (result.success && result.doctor) {
-      setDoctors([...doctors, result.doctor]);
+      // doctors хүснэгтэд branch_ids багана байхгүй тул form-оос нэмнэ
+      setDoctors([...doctors, { ...result.doctor, branch_ids: data.branch_ids ?? [] }]);
       setShowAddForm(false);
       showMessage('success', 'Эмч амжилттай нэмэгдлээ!');
     } else {
@@ -113,6 +119,7 @@ export default function DoctorsManager({
           <h3 className="font-semibold text-blue-900 mb-4">Шинэ эмч</h3>
           <DoctorForm
             services={services}
+            branches={branches}
             clinicHours={clinicHours}
             onCancel={() => setShowAddForm(false)}
             onSubmit={handleAdd}
@@ -142,6 +149,7 @@ export default function DoctorsManager({
                 <DoctorForm
                   initialData={doctor}
                   services={services}
+                  branches={branches}
                   clinicHours={clinicHours}
                   onCancel={() => setEditingId(null)}
                   onSubmit={data => handleUpdate(doctor.id, data)}

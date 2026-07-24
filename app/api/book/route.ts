@@ -22,9 +22,11 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: firstZodError(parsed.error) }, { status: 400 });
     }
-    const { clinicId, doctorId, customerName, customerPhone, service, scheduledAt } = parsed.data;
+    const { clinicId, doctorId, branchId, customerName, customerPhone, service, scheduledAt } =
+      parsed.data;
 
-    // Давхар захиалгаас сэргийлэх — цаг сул эсэхийг шалгах
+    // Давхар захиалгаас сэргийлэх — цаг сул эсэхийг шалгах.
+    // Эмч нэг зэрэг нэг л газар байх тул салбараас үл хамааран эмчээр шалгана.
     const available = await isSlotAvailable(clinicId, doctorId ?? null, scheduledAt);
     if (!available) {
       return NextResponse.json(
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
     const { error } = await supabase.from('appointments').insert({
       clinic_id: clinicId,
       doctor_id: doctorId || null,
+      branch_id: branchId || null,
       customer_name: customerName,
       customer_phone: customerPhone,
       service,

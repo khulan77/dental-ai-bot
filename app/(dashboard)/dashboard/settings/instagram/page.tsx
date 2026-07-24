@@ -24,6 +24,7 @@ export default async function InstagramSettingsPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         <TabLink href="/dashboard/settings">Үндсэн</TabLink>
+        <TabLink href="/dashboard/settings/branches">Салбар</TabLink>
         <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
         <TabLink href="/dashboard/settings/doctors">Эмч нар</TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>

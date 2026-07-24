@@ -12,6 +12,14 @@ export type Doctor = {
   bio: string | null;
   avatar_url: string | null;
   service_ids: string[] | null;
+  branch_ids?: string[];   // энэ эмч аль салбарт ажилладаг (салбартай эмнэлэгт)
+};
+
+export type Branch = {
+  id: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
 };
 
 export type Clinic = {

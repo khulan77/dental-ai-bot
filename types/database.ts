@@ -73,9 +73,22 @@ export type Conversation = {
   created_at: string;
 };
 
+export type Branch = {
+  id: string;
+  clinic_id: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  business_hours: BusinessHours | null;  // null бол clinic default
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+};
+
 export type Appointment = {
   id: string;
   clinic_id: string;
+  branch_id: string | null;
   conversation_id: string | null;
   customer_name: string;
   customer_phone: string | null;

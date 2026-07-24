@@ -1,6 +1,6 @@
 'use client';
 
-import type { Clinic } from './types';
+import type { Clinic, Branch } from './types';
 import { MapPin, Phone, CalendarDays, MessageCircle } from 'lucide-react';
 
 const QUICK_QUESTIONS = [
@@ -13,14 +13,17 @@ const QUICK_QUESTIONS = [
 
 export default function Contact({
   clinic,
+  branches = [],
   onBookClick,
   onAskQuestion,
 }: {
   clinic: Clinic;
+  branches?: Branch[];
   onBookClick: () => void;
   onAskQuestion: (q: string) => void;
 }) {
   const phone = clinic.owner_phone;
+  const hasBranches = branches.length > 0;
 
   return (
     <>
@@ -49,41 +52,80 @@ export default function Contact({
             </div>
           </div>
 
-          {/* Холбоо барих */}
-          {(clinic.address || phone) && (
-            <div className="grid sm:grid-cols-2 gap-4 mt-5">
-              {clinic.address && (
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="site-card site-card-hover flex items-start gap-4 p-5 group"
-                >
-                  <div className="site-icon-tile shrink-0">
-                    <MapPin className="w-[18px] h-[18px]" />
-                  </div>
-                  <div>
-                    <div className="text-[13px] text-[var(--site-muted)] mb-0.5">Хаяг</div>
-                    <div className="text-[14px] font-medium text-[var(--site-ink)] leading-relaxed group-hover:text-[var(--site-accent)] transition-colors">
-                      {clinic.address}
+          {/* Салбартай эмнэлэг — салбар бүрийн хаяг, утас */}
+          {hasBranches ? (
+            <div className="mt-8">
+              <p className="site-eyebrow text-center block">Манай салбарууд</p>
+              <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                {branches.map(b => (
+                  <div key={b.id} className="site-card p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="site-icon-tile shrink-0">
+                        <MapPin className="w-[18px] h-[18px]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-semibold text-[var(--site-ink)]">{b.name}</div>
+                        {b.address && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[13px] text-[var(--site-muted)] leading-relaxed hover:text-[var(--site-accent)] transition-colors block mt-0.5"
+                          >
+                            {b.address}
+                          </a>
+                        )}
+                        {b.phone && (
+                          <a
+                            href={`tel:${b.phone}`}
+                            className="inline-flex items-center gap-1.5 text-[13px] text-[var(--site-muted)] hover:text-[var(--site-accent)] transition-colors mt-1.5"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            {b.phone}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </a>
-              )}
-              {phone && (
-                <a href={`tel:${phone}`} className="site-card site-card-hover flex items-start gap-4 p-5 group">
-                  <div className="site-icon-tile shrink-0">
-                    <Phone className="w-[18px] h-[18px]" />
-                  </div>
-                  <div>
-                    <div className="text-[13px] text-[var(--site-muted)] mb-0.5">Утас</div>
-                    <div className="text-[14px] font-medium text-[var(--site-ink)] group-hover:text-[var(--site-accent)] transition-colors">
-                      {phone}
-                    </div>
-                  </div>
-                </a>
-              )}
+                ))}
+              </div>
             </div>
+          ) : (
+            (clinic.address || phone) && (
+              <div className="grid sm:grid-cols-2 gap-4 mt-5">
+                {clinic.address && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="site-card site-card-hover flex items-start gap-4 p-5 group"
+                  >
+                    <div className="site-icon-tile shrink-0">
+                      <MapPin className="w-[18px] h-[18px]" />
+                    </div>
+                    <div>
+                      <div className="text-[13px] text-[var(--site-muted)] mb-0.5">Хаяг</div>
+                      <div className="text-[14px] font-medium text-[var(--site-ink)] leading-relaxed group-hover:text-[var(--site-accent)] transition-colors">
+                        {clinic.address}
+                      </div>
+                    </div>
+                  </a>
+                )}
+                {phone && (
+                  <a href={`tel:${phone}`} className="site-card site-card-hover flex items-start gap-4 p-5 group">
+                    <div className="site-icon-tile shrink-0">
+                      <Phone className="w-[18px] h-[18px]" />
+                    </div>
+                    <div>
+                      <div className="text-[13px] text-[var(--site-muted)] mb-0.5">Утас</div>
+                      <div className="text-[14px] font-medium text-[var(--site-ink)] group-hover:text-[var(--site-accent)] transition-colors">
+                        {phone}
+                      </div>
+                    </div>
+                  </a>
+                )}
+              </div>
+            )
           )}
         </div>
       </section>

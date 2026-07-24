@@ -12,14 +12,16 @@ import BookingModal from './components/booking-modal';
 import ServiceDoctorsModal from './components/service-doctors-modal';
 import DentalTips from './components/dental-tips';
 
-import type { Clinic, Doctor, Service } from './components/types';
+import type { Clinic, Doctor, Service, Branch } from './components/types';
 
 export default function ClinicLanding({
   clinic,
   doctors,
+  branches = [],
 }: {
   clinic: Clinic;
   doctors: Doctor[];
+  branches?: Branch[];
 }) {
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState<string | undefined>();
@@ -40,7 +42,7 @@ export default function ClinicLanding({
       <Services services={services} onServiceClick={setPickerService} />
       <DentalTips onAskQuestion={openChatWithMessage} />
       <Doctors doctors={doctors} onChatClick={openChat} onBookClick={setBookingDoctor} />
-      <Contact clinic={clinic} onBookClick={scrollToDoctors} onAskQuestion={openChatWithMessage} />
+      <Contact clinic={clinic} branches={branches} onBookClick={scrollToDoctors} onAskQuestion={openChatWithMessage} />
      
 
       {/* Floating Chat Button */}
@@ -74,6 +76,7 @@ export default function ClinicLanding({
           doctor={bookingDoctor}
           clinicId={clinic.id}
           services={services}
+          branches={branches}
           initialService={bookingService}
           onClose={() => { setBookingDoctor(null); setBookingService(null); }}
         />

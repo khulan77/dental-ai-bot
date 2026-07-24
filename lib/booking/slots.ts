@@ -86,14 +86,18 @@ export async function isSlotAvailable(
 export async function getDoctorDaySchedule(
   clinicId: string,
   doctorId: string,
-  date: Date
+  date: Date,
+  branchId: string | null = null
 ): Promise<DaySchedule> {
   const supabase = createAdminClient();
 
-  // Доктор болон клиникийн мэдээлэл
-  const [{ data: doctor }, { data: clinic }] = await Promise.all([
+  // Доктор, клиник, (сонгосон бол) салбарын мэдээлэл
+  const [{ data: doctor }, { data: clinic }, branchRes] = await Promise.all([
     supabase.from('doctors').select('*').eq('id', doctorId).single(),
     supabase.from('clinics').select('business_hours').eq('id', clinicId).single(),
+    branchId
+      ? supabase.from('branches').select('business_hours').eq('id', branchId).single()
+      : Promise.resolve({ data: null }),
   ]);
 
   const dayIndex = clinicDayIndex(date);
@@ -105,8 +109,13 @@ export async function getDoctorDaySchedule(
     return { date: dateISO, dayName, isOpen: false, slots: [] };
   }
 
-  // Эмчийн хуваарь — custom_hours байвал тэр, эс бөгөөс клиникийн default
-  const hoursToUse = (doctor.custom_hours ?? clinic?.business_hours) as BusinessHoursData;
+  // Цагийн эрэмбэ: эмчийн custom_hours → салбарын цаг → клиникийн default.
+  // Эмч тодорхой хуваарьтай бол салбараас үл хамааран мөрдөнө.
+  const branchHours = (branchRes.data as { business_hours?: BusinessHoursData } | null)
+    ?.business_hours;
+  const hoursToUse = (doctor.custom_hours ??
+    branchHours ??
+    clinic?.business_hours) as BusinessHoursData;
   const dayHours = hoursToUse?.[dayKey];
 
   if (!dayHours) {

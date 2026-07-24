@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   const clinicId = searchParams.get('clinicId');
   const doctorId = searchParams.get('doctorId');
   const dateStr = searchParams.get('date');
+  const branchId = searchParams.get('branchId'); // сонголт — салбартай эмнэлэгт
 
   if (!clinicId || !doctorId || !dateStr) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 });
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
   // new Date(str + 'T00:00:00') нь серверийн бүсээр задалдаг тул
   // Vercel (UTC) дээр өдөр гулсах эрсдэлтэй байсан.
   const date = clinicInstantFrom(dateStr, '12:00');
-  const schedule = await getDoctorDaySchedule(clinicId, doctorId, date);
+  const schedule = await getDoctorDaySchedule(clinicId, doctorId, date, branchId);
 
   return NextResponse.json({
     date: schedule.date,

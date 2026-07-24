@@ -26,6 +26,9 @@ export default async function HoursPage() {
         <TabLink href="/dashboard/settings" active={false}>
           Үндсэн
         </TabLink>
+        <TabLink href="/dashboard/settings/branches" active={false}>
+          Салбар
+        </TabLink>
         <TabLink href="/dashboard/settings/services" active={false}>
           Үйлчилгээ
         </TabLink>

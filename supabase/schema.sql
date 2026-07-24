@@ -60,6 +60,32 @@ create table if not exists public.doctors (
 create index if not exists doctors_clinic_id_idx on public.doctors (clinic_id);
 
 -- =====================================================================
+-- branches — эмнэлгийн салбар (олон хаяг). Салбаргүй эмнэлэг ажиллана.
+-- =====================================================================
+create table if not exists public.branches (
+  id              uuid primary key default gen_random_uuid(),
+  clinic_id       uuid not null references public.clinics (id) on delete cascade,
+  name            text not null,
+  address         text,
+  phone           text,
+  business_hours  jsonb,                       -- null бол clinic default цаг
+  display_order   integer not null default 0,
+  is_active       boolean not null default true,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists branches_clinic_id_idx on public.branches (clinic_id);
+
+-- doctor_branches — эмч ↔ салбар (олон-олон)
+create table if not exists public.doctor_branches (
+  doctor_id  uuid not null references public.doctors (id)  on delete cascade,
+  branch_id  uuid not null references public.branches (id) on delete cascade,
+  primary key (doctor_id, branch_id)
+);
+
+create index if not exists doctor_branches_branch_idx on public.doctor_branches (branch_id);
+
+-- =====================================================================
 -- conversations
 -- =====================================================================
 create table if not exists public.conversations (
@@ -89,6 +115,7 @@ create table if not exists public.appointments (
   clinic_id         uuid not null references public.clinics (id) on delete cascade,
   conversation_id   uuid references public.conversations (id) on delete set null,
   doctor_id         uuid references public.doctors (id) on delete set null,
+  branch_id         uuid references public.branches (id) on delete set null,
   customer_name     text not null,
   customer_phone    text,
   service           text,
@@ -179,6 +206,8 @@ $$;
 -- =====================================================================
 alter table public.clinics        enable row level security;
 alter table public.doctors        enable row level security;
+alter table public.branches       enable row level security;
+alter table public.doctor_branches enable row level security;
 alter table public.conversations  enable row level security;
 alter table public.appointments   enable row level security;
 alter table public.response_cache enable row level security;
@@ -190,6 +219,14 @@ create policy "clinics owner all" on public.clinics
 -- Бусад хүснэгт: эзэмшдэг клиникээрээ дамжуулан хандах
 create policy "doctors owner all" on public.doctors
   for all using (exists (select 1 from public.clinics c where c.id = doctors.clinic_id and c.owner_id = auth.uid()));
+
+create policy "branches owner all" on public.branches
+  for all using (exists (select 1 from public.clinics c where c.id = branches.clinic_id and c.owner_id = auth.uid()));
+
+create policy "doctor_branches owner all" on public.doctor_branches
+  for all using (exists (
+    select 1 from public.branches b join public.clinics c on c.id = b.clinic_id
+    where b.id = doctor_branches.branch_id and c.owner_id = auth.uid()));
 
 create policy "conversations owner all" on public.conversations
   for all using (exists (select 1 from public.clinics c where c.id = conversations.clinic_id and c.owner_id = auth.uid()));

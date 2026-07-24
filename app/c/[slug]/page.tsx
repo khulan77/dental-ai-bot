@@ -1,12 +1,13 @@
 import { createAdminClient } from '@/lib/db/supabase';
 import { notFound } from 'next/navigation';
 import ClinicLanding from './clinic-landing';
+import { getClinicBranches, getDoctorBranchMap } from '@/lib/booking/branches';
 
 export const dynamic = 'force-dynamic';
 
 async function getData(slug: string) {
   const supabase = createAdminClient();
-  
+
   const { data: clinic } = await supabase
     .from('clinics')
     .select('*')
@@ -15,14 +16,27 @@ async function getData(slug: string) {
 
   if (!clinic) return null;
 
-  const { data: doctors } = await supabase
+  const { data: doctorRows } = await supabase
     .from('doctors')
     .select('id, name, specialty, bio, avatar_url, service_ids')
     .eq('clinic_id', clinic.id)
     .eq('is_active', true)
     .order('display_order');
 
-  return { clinic, doctors: doctors ?? [] };
+  const doctors = doctorRows ?? [];
+
+  // Салбар болон эмч↔салбар холбоос. Салбаргүй эмнэлэгт хоосон.
+  const [branches, branchMap] = await Promise.all([
+    getClinicBranches(clinic.id),
+    getDoctorBranchMap(doctors.map(d => d.id)),
+  ]);
+
+  const doctorsWithBranches = doctors.map(d => ({
+    ...d,
+    branch_ids: branchMap[d.id] ?? [],
+  }));
+
+  return { clinic, doctors: doctorsWithBranches, branches };
 }
 
 export async function generateMetadata({
@@ -69,5 +83,7 @@ export default async function ClinicPage({
     notFound();
   }
 
-  return <ClinicLanding clinic={data.clinic} doctors={data.doctors} />;
+  return (
+    <ClinicLanding clinic={data.clinic} doctors={data.doctors} branches={data.branches} />
+  );
 }
