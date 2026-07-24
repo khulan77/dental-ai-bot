@@ -15,13 +15,15 @@ type Props = {
   clinicId: string;
   services: Service[];
   branches?: Branch[];
+  /** Doctors хэсэгт салбар аль хэдийн сонгогдсон бол — modal дахин асуухгүй */
+  preselectedBranchId?: string | null;
   initialService?: Service | null;
   onClose: () => void;
 };
 
 const DAY_NAMES = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
 
-export default function BookingModal({ doctor, clinicId, services, branches = [], initialService, onClose }: Props) {
+export default function BookingModal({ doctor, clinicId, services, branches = [], preselectedBranchId, initialService, onClose }: Props) {
   const doctorServices =
     doctor.service_ids && doctor.service_ids.length > 0
       ? services.filter(s => doctor.service_ids!.includes(s.id))
@@ -29,6 +31,10 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
 
   // Энэ эмч ажилладаг салбарууд. Салбаргүй эмнэлэгт хоосон → салбар сонгохгүй.
   const doctorBranches = branches.filter(b => doctor.branch_ids?.includes(b.id));
+  // Doctors хэсэгт салбар сонгогдсон бол modal-д зөвхөн харуулна (дахин сонгуулахгүй)
+  const lockedBranch = preselectedBranchId
+    ? doctorBranches.find(b => b.id === preselectedBranchId) ?? null
+    : null;
 
   // Үйлчилгээнээс дамжиж ирсэн бол түүнийг урьдчилан сонгоно
   const preselected =
@@ -45,7 +51,9 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
   });
 
   const [selectedService, setSelectedService] = useState<Service | null>(preselected);
-  const [selectedBranchId, setSelectedBranchId] = useState<string>(doctorBranches[0]?.id ?? '');
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(
+    preselectedBranchId ?? doctorBranches[0]?.id ?? ''
+  );
   const [selectedDate, setSelectedDate] = useState<string>(dates[1].iso);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [slots, setSlots] = useState<string[]>([]);
@@ -165,28 +173,43 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
         {/* Гүйдэг хэсэг */}
         <div className="overflow-y-auto flex-1 p-5 space-y-6">
 
-          {/* Салбар — олон салбартай эмнэлэгт л харагдана */}
-          {doctorBranches.length > 0 && (
-            <div>
-              <p className="site-label">
-                <MapPin className="w-3.5 h-3.5" /> Салбар
-              </p>
-              <div className="space-y-2">
-                {doctorBranches.map(b => (
-                  <button
-                    key={b.id}
-                    onClick={() => setSelectedBranchId(b.id)}
-                    aria-pressed={selectedBranchId === b.id}
-                    className="site-option w-full flex flex-col items-start p-3.5"
-                  >
-                    <span className="text-[14px] font-medium text-[var(--site-ink)]">{b.name}</span>
-                    {b.address && (
-                      <span className="text-[13px] text-[var(--site-muted)] mt-0.5">{b.address}</span>
-                    )}
-                  </button>
-                ))}
+          {/* Салбар. Doctors хэсэгт сонгогдсон бол зөвхөн харуулна. */}
+          {lockedBranch ? (
+            <div className="flex items-start gap-3 rounded-[var(--site-r-btn)] border border-[var(--site-line)] bg-[var(--site-bg-soft)] p-3.5">
+              <div className="site-icon-tile shrink-0">
+                <MapPin className="w-[18px] h-[18px]" />
+              </div>
+              <div>
+                <div className="text-[13px] text-[var(--site-muted)]">Салбар</div>
+                <div className="text-[14px] font-medium text-[var(--site-ink)]">{lockedBranch.name}</div>
+                {lockedBranch.address && (
+                  <div className="text-[13px] text-[var(--site-muted)] mt-0.5">{lockedBranch.address}</div>
+                )}
               </div>
             </div>
+          ) : (
+            doctorBranches.length > 0 && (
+              <div>
+                <p className="site-label">
+                  <MapPin className="w-3.5 h-3.5" /> Салбар
+                </p>
+                <div className="space-y-2">
+                  {doctorBranches.map(b => (
+                    <button
+                      key={b.id}
+                      onClick={() => setSelectedBranchId(b.id)}
+                      aria-pressed={selectedBranchId === b.id}
+                      className="site-option w-full flex flex-col items-start p-3.5"
+                    >
+                      <span className="text-[14px] font-medium text-[var(--site-ink)]">{b.name}</span>
+                      {b.address && (
+                        <span className="text-[13px] text-[var(--site-muted)] mt-0.5">{b.address}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           {/* Үйлчилгээ */}

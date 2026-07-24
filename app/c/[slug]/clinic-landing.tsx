@@ -26,6 +26,7 @@ export default function ClinicLanding({
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState<string | undefined>();
   const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
+  const [bookingBranchId, setBookingBranchId] = useState<string | null>(null);
   const [pickerService, setPickerService] = useState<Service | null>(null);
   const [bookingService, setBookingService] = useState<Service | null>(null);
   const services = (clinic.services ?? []) as Service[];
@@ -41,7 +42,15 @@ export default function ClinicLanding({
       <Hero clinic={clinic} doctors={doctors} services={services} onBookClick={scrollToDoctors} />
       <Services services={services} onServiceClick={setPickerService} />
       <DentalTips onAskQuestion={openChatWithMessage} />
-      <Doctors doctors={doctors} onChatClick={openChat} onBookClick={setBookingDoctor} />
+      <Doctors
+        doctors={doctors}
+        branches={branches}
+        onChatClick={openChat}
+        onBookClick={(doctor, branchId) => {
+          setBookingDoctor(doctor);
+          setBookingBranchId(branchId ?? null);
+        }}
+      />
       <Contact clinic={clinic} branches={branches} onBookClick={scrollToDoctors} onAskQuestion={openChatWithMessage} />
      
 
@@ -77,8 +86,9 @@ export default function ClinicLanding({
           clinicId={clinic.id}
           services={services}
           branches={branches}
+          preselectedBranchId={bookingBranchId}
           initialService={bookingService}
-          onClose={() => { setBookingDoctor(null); setBookingService(null); }}
+          onClose={() => { setBookingDoctor(null); setBookingService(null); setBookingBranchId(null); }}
         />
       )}
 

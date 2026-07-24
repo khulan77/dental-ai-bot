@@ -16,7 +16,6 @@ export default function ClinicInfoForm({ clinic }: { clinic: any }) {
     const data = {
       name: formData.get('name') as string,
       about: formData.get('about') as string,
-      address: formData.get('address') as string,
       owner_phone: formData.get('owner_phone') as string,
       owner_email: formData.get('owner_email') as string,
       website: formData.get('website') as string,
@@ -53,12 +52,9 @@ export default function ClinicInfoForm({ clinic }: { clinic: any }) {
           textarea
           placeholder="Жнь: 10 жилийн туршлагатай мэргэжлийн шүдний эмнэлэг"
         />
-        <Field
-          label="Хаяг"
-          name="address"
-          defaultValue={clinic.address ?? ''}
-          placeholder="Жнь: СБД, 1-р хороо, ..."
-        />
+        <p className="text-xs text-slate-400">
+          Хаягийг «Салбар» хэсэгт салбар бүрээр нь оруулна.
+        </p>
       </Section>
 
       {/* Contact */}
