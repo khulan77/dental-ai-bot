@@ -32,9 +32,28 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const data = await getData(slug);
+
+  const title = data?.clinic ? `${data.clinic.name} — Цаг захиалах` : 'Шүдний эмнэлэг';
+  const description =
+    data?.clinic?.about ?? 'Онлайнаар цагаа захиалаарай. Эмч, үйлчилгээ, сул цагаа хараад шууд бүртгүүлнэ.';
+
   return {
-    title: data?.clinic ? `${data.clinic.name} - Цаг захиалах` : 'Клиник',
-    description: data?.clinic?.about ?? 'Шүдний эрүүл мэндийн төв',
+    title,
+    description,
+    // Messenger, Facebook-д линк хуваалцахад гарчиг, тайлбар, зураг харагдана.
+    // og:image-ийг opengraph-image.tsx автоматаар нэмнэ.
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'mn_MN',
+      url: `/c/${slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
   };
 }
 

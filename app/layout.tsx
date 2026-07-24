@@ -10,9 +10,20 @@ const inter = Inter({
   display: 'swap',
 });
 
+// og:image-ийн бүтэн хаяг үүсгэхэд metadataBase шаардлагатай.
+// Vercel дээр NEXT_PUBLIC_APP_URL тохируулаагүй бол VERCEL_URL руу шилжинэ.
+function siteUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
+
 export const metadata: Metadata = {
-  title: 'Dental AI - Шүдний эмнэлгийн AI ассистент',
-  description: '24/7 AI bot танай DM-д автоматаар хариулж, цаг захиалга авна',
+  metadataBase: new URL(siteUrl()),
+  title: 'Шүдний эмнэлгийн цаг захиалгын систем',
+  description: 'Үйлчлүүлэгч тань онлайнаар цагаа захиална. AI ассистент DM-д автоматаар хариулна.',
 };
 
 export default function RootLayout({
