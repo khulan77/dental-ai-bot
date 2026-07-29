@@ -33,7 +33,6 @@ export default async function ServicesPage() {
         </TabLink>
         <TabLink href="/dashboard/settings/doctors">Эмч нар</TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
-        <TabLink href="/dashboard/settings/instagram">Instagram</TabLink>
       </div>
 
       <ServicesManager initialServices={clinic.services ?? []} />

@@ -5,6 +5,7 @@ import {
   clinicDayBounds,
   clinicDayIndex,
 } from '@/lib/booking/timezone';
+import { effectivePrice } from '@/lib/booking/pricing';
 
 export type DashboardStats = {
   // Today
@@ -18,11 +19,7 @@ export type DashboardStats = {
   // All time
   totalCount: number;
   totalRevenue: number;
-  
-  // Conversations
-  activeChats: number;
-  totalChats: number;
-  
+
   // Comparison
   yesterdayCount: number;
   lastWeekCount: number;
@@ -48,8 +45,6 @@ export async function getDashboardStats(clinicId: string): Promise<DashboardStat
     weekApts,
     lastWeekApts,
     allApts,
-    activeChats,
-    totalChats,
     clinicData,
   ] = await Promise.all([
     supabase
@@ -81,15 +76,6 @@ export async function getDashboardStats(clinicId: string): Promise<DashboardStat
       .select('service')
       .eq('clinic_id', clinicId),
     supabase
-      .from('conversations')
-      .select('id', { count: 'exact', head: true })
-      .eq('clinic_id', clinicId)
-      .eq('status', 'active'),
-    supabase
-      .from('conversations')
-      .select('id', { count: 'exact', head: true })
-      .eq('clinic_id', clinicId),
-    supabase
       .from('clinics')
       .select('services')
       .eq('id', clinicId)
@@ -101,8 +87,10 @@ export async function getDashboardStats(clinicId: string): Promise<DashboardStat
   const services = (clinicData.data?.services ?? []) as Array<{
     name: string;
     price_mnt: number;
+    discount_percent?: number | null;
+    discount_until?: string | null;
   }>;
-  services.forEach(s => servicePrices.set(s.name, s.price_mnt));
+  services.forEach(s => servicePrices.set(s.name, effectivePrice(s)));
 
   // Revenue тооцоолох
   function calcRevenue(apts: Array<{ service: string | null }> | null): number {
@@ -120,8 +108,6 @@ export async function getDashboardStats(clinicId: string): Promise<DashboardStat
     weekRevenue: calcRevenue(weekApts.data),
     totalCount: allApts.data?.length ?? 0,
     totalRevenue: calcRevenue(allApts.data),
-    activeChats: activeChats.count ?? 0,
-    totalChats: totalChats.count ?? 0,
     yesterdayCount: yesterdayApts.count ?? 0,
     lastWeekCount: lastWeekApts.count ?? 0,
   };
@@ -159,8 +145,10 @@ export async function getWeeklyTrend(clinicId: string): Promise<DailyStat[]> {
   const services = (clinic?.services ?? []) as Array<{
     name: string;
     price_mnt: number;
+    discount_percent?: number | null;
+    discount_until?: string | null;
   }>;
-  services.forEach(s => servicePrices.set(s.name, s.price_mnt));
+  services.forEach(s => servicePrices.set(s.name, effectivePrice(s)));
 
   const dayLabels = ['Ня', 'Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя'];
   const result: DailyStat[] = [];
@@ -222,8 +210,10 @@ export async function getTopCustomers(
   const services = (clinic?.services ?? []) as Array<{
     name: string;
     price_mnt: number;
+    discount_percent?: number | null;
+    discount_until?: string | null;
   }>;
-  services.forEach(s => servicePrices.set(s.name, s.price_mnt));
+  services.forEach(s => servicePrices.set(s.name, effectivePrice(s)));
 
   // Customer groupping
   const customerMap = new Map<string, TopCustomer>();
@@ -300,7 +290,7 @@ export async function getCacheStats(clinicId: string): Promise<CacheStats> {
  * Recent activity (сүүлийн үйлдлүүд)
  */
 export type ActivityItem = {
-  type: 'appointment' | 'conversation';
+  type: 'appointment';
   title: string;
   subtitle: string;
   timestamp: string;
@@ -313,48 +303,20 @@ export async function getRecentActivity(
 ): Promise<ActivityItem[]> {
   const supabase = createAdminClient();
 
-  const [appointments, conversations] = await Promise.all([
-    supabase
-      .from('appointments')
-      .select('customer_name, service, scheduled_at, created_at, status')
-      .eq('clinic_id', clinicId)
-      .order('created_at', { ascending: false })
-      .limit(limit),
-    supabase
-      .from('conversations')
-      .select('customer_name, last_message_at, status, messages')
-      .eq('clinic_id', clinicId)
-      .order('last_message_at', { ascending: false })
-      .limit(limit),
-  ]);
+  const { data: appointments } = await supabase
+    .from('appointments')
+    .select('customer_name, service, scheduled_at, created_at, status')
+    .eq('clinic_id', clinicId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
 
-  const items: ActivityItem[] = [];
-
-  (appointments.data ?? []).forEach(apt => {
-    items.push({
-      type: 'appointment',
-      title: `${apt.customer_name} цаг авлаа`,
-      subtitle: apt.service ?? 'Үйлчилгээ',
-      timestamp: apt.created_at,
-      icon: '📅',
-    });
-  });
-
-  (conversations.data ?? []).forEach(conv => {
-    const msgs = (conv.messages ?? []) as Array<{ content: string }>;
-    const lastMsg = msgs[msgs.length - 1];
-    items.push({
-      type: 'conversation',
-      title: `${conv.customer_name ?? 'Тодорхойгүй'} мессеж бичлээ`,
-      subtitle: lastMsg?.content?.slice(0, 50) ?? '',
-      timestamp: conv.last_message_at,
-      icon: '💬',
-    });
-  });
-
-  return items
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, limit);
+  return (appointments ?? []).map(apt => ({
+    type: 'appointment' as const,
+    title: `${apt.customer_name} цаг авлаа`,
+    subtitle: apt.service ?? 'Үйлчилгээ',
+    timestamp: apt.created_at,
+    icon: '📅',
+  }));
 }
 
 /**
@@ -401,8 +363,10 @@ export async function getDoctorStats(clinicId: string): Promise<DoctorStat[]> {
   const services = (clinic?.services ?? []) as Array<{
     name: string;
     price_mnt: number;
+    discount_percent?: number | null;
+    discount_until?: string | null;
   }>;
-  services.forEach(s => servicePrices.set(s.name, s.price_mnt));
+  services.forEach(s => servicePrices.set(s.name, effectivePrice(s)));
 
   // 7 хоногийн өмнөх өдрийн эхлэл (эмнэлгийн бүсээр)
   const weekAgo = addClinicDays(clinicDayBounds(new Date()).start, -7);

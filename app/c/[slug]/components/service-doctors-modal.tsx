@@ -2,6 +2,7 @@
 
 import { X, ChevronRight, Clock, Stethoscope } from 'lucide-react';
 import type { Doctor, Service } from './types';
+import { effectivePrice, isDiscountActive } from '@/lib/booking/pricing';
 
 type Props = {
   service: Service;
@@ -35,7 +36,20 @@ export default function ServiceDoctorsModal({ service, doctors, onSelectDoctor, 
             <p className="site-eyebrow mb-0">Эмч сонгох</p>
             <h3 className="site-h3 truncate">{service.name}</h3>
             <p className="text-[13px] text-[var(--site-muted)] flex items-center gap-1.5">
-              <Clock className="w-3 h-3" /> {service.duration_minutes} мин · ₮{service.price_mnt.toLocaleString()}
+              <Clock className="w-3 h-3" /> {service.duration_minutes} мин ·{' '}
+              {isDiscountActive(service) ? (
+                <>
+                  <span className="line-through">₮{service.price_mnt.toLocaleString()}</span>
+                  <span className="font-semibold text-[var(--site-sale)]">
+                    ₮{effectivePrice(service).toLocaleString()}
+                  </span>
+                  <span className="site-sale-badge text-[10px]">
+                    -{service.discount_percent}%
+                  </span>
+                </>
+              ) : (
+                <>₮{service.price_mnt.toLocaleString()}</>
+              )}
             </p>
           </div>
           <button

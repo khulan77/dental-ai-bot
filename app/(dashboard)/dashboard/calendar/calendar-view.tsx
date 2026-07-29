@@ -180,6 +180,11 @@ export default function CalendarView({
                       <p className="text-xs text-slate-500">{slot.start}</p>
                     </div>
                   </div>
+                  {slot.status === 'pending' && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-medium">
+                      ⏳ Баталгаажаагүй
+                    </span>
+                  )}
                 </div>
               ))}
           </div>
@@ -282,13 +287,25 @@ function SlotCard({ slot }: { slot: TimeSlot }) {
     );
   }
 
+  // Хүлээгдэж буй захиалга — баталгаажсанаас өнгөөр нь ялгана
+  const isPending = slot.status === 'pending';
+
   return (
     <div
-      className="px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-center"
-      title={slot.customerName ?? 'Захиалсан'}
+      className={`px-3 py-2.5 rounded-lg border text-center ${
+        isPending ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
+      }`}
+      title={`${slot.customerName ?? 'Захиалсан'}${isPending ? ' — баталгаажаагүй' : ''}`}
     >
-      <p className="text-sm font-semibold text-red-900">{slot.start}</p>
-      <p className="text-[10px] text-red-600 mt-0.5 truncate">
+      <p className={`text-sm font-semibold ${isPending ? 'text-amber-900' : 'text-red-900'}`}>
+        {slot.start}
+      </p>
+      <p
+        className={`text-[10px] mt-0.5 truncate ${
+          isPending ? 'text-amber-700' : 'text-red-600'
+        }`}
+      >
+        {isPending ? '⏳ ' : ''}
         {slot.customerName ?? 'Захиалсан'}
       </p>
     </div>

@@ -84,6 +84,7 @@ export default function ClinicLanding({
         <BookingModal
           doctor={bookingDoctor}
           clinicId={clinic.id}
+          clinicSlug={clinic.slug}
           services={services}
           branches={branches}
           preselectedBranchId={bookingBranchId}

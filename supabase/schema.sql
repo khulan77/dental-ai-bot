@@ -15,8 +15,6 @@ create table if not exists public.clinics (
   owner_id                 uuid references auth.users (id) on delete cascade,
   name                     text not null,
   slug                     text unique not null,
-  instagram_page_id        text,
-  meta_page_access_token   text,
   google_calendar_id       text,
   google_refresh_token     text,
   business_hours           jsonb,
@@ -86,34 +84,11 @@ create table if not exists public.doctor_branches (
 create index if not exists doctor_branches_branch_idx on public.doctor_branches (branch_id);
 
 -- =====================================================================
--- conversations
--- =====================================================================
-create table if not exists public.conversations (
-  id                    uuid primary key default gen_random_uuid(),
-  clinic_id             uuid not null references public.clinics (id) on delete cascade,
-  customer_messenger_id text not null,
-  customer_name         text,
-  customer_phone        text,
-  channel               text not null default 'instagram'
-                          check (channel in ('instagram', 'messenger')),
-  messages              jsonb not null default '[]'::jsonb,
-  status                text not null default 'active'
-                          check (status in ('active', 'booked', 'lost')),
-  last_message_at       timestamptz not null default now(),
-  created_at            timestamptz not null default now()
-);
-
-create index if not exists conversations_clinic_id_idx on public.conversations (clinic_id);
-create index if not exists conversations_messenger_idx
-  on public.conversations (clinic_id, customer_messenger_id);
-
--- =====================================================================
 -- appointments
 -- =====================================================================
 create table if not exists public.appointments (
   id                uuid primary key default gen_random_uuid(),
   clinic_id         uuid not null references public.clinics (id) on delete cascade,
-  conversation_id   uuid references public.conversations (id) on delete set null,
   doctor_id         uuid references public.doctors (id) on delete set null,
   branch_id         uuid references public.branches (id) on delete set null,
   customer_name     text not null,
@@ -121,8 +96,10 @@ create table if not exists public.appointments (
   service           text,
   scheduled_at      timestamptz not null,
   duration_minutes  integer not null default 30,
-  status            text not null default 'confirmed'
-                      check (status in ('confirmed','reminded','completed','no_show','cancelled')),
+  status            text not null default 'pending'
+                      check (status in ('pending','confirmed','reminded','completed','no_show','cancelled')),
+  -- Үйлчлүүлэгч захиалгаа шалгах богино код (жнь "K7QM4X")
+  booking_code      text,
   google_event_id   text,
   notes             text,
   created_at        timestamptz not null default now()
@@ -130,6 +107,10 @@ create table if not exists public.appointments (
 
 create index if not exists appointments_clinic_id_idx on public.appointments (clinic_id);
 create index if not exists appointments_scheduled_idx on public.appointments (clinic_id, scheduled_at);
+create index if not exists appointments_phone_idx on public.appointments (clinic_id, customer_phone);
+create unique index if not exists appointments_booking_code_idx
+  on public.appointments (booking_code)
+  where booking_code is not null;
 
 -- =====================================================================
 -- response_cache  (semantic AI cache)
@@ -208,7 +189,6 @@ alter table public.clinics        enable row level security;
 alter table public.doctors        enable row level security;
 alter table public.branches       enable row level security;
 alter table public.doctor_branches enable row level security;
-alter table public.conversations  enable row level security;
 alter table public.appointments   enable row level security;
 alter table public.response_cache enable row level security;
 
@@ -227,9 +207,6 @@ create policy "doctor_branches owner all" on public.doctor_branches
   for all using (exists (
     select 1 from public.branches b join public.clinics c on c.id = b.clinic_id
     where b.id = doctor_branches.branch_id and c.owner_id = auth.uid()));
-
-create policy "conversations owner all" on public.conversations
-  for all using (exists (select 1 from public.clinics c where c.id = conversations.clinic_id and c.owner_id = auth.uid()));
 
 create policy "appointments owner all" on public.appointments
   for all using (exists (select 1 from public.clinics c where c.id = appointments.clinic_id and c.owner_id = auth.uid()));

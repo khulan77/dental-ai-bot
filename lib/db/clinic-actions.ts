@@ -28,8 +28,6 @@ export type ClinicUpdateData = {
   instagram_url?: string;
   latitude?: number;
   longitude?: number;
-  instagram_page_id?: string | null;
-  meta_page_access_token?: string | null;
 };
 
 export async function updateClinic(
@@ -69,6 +67,10 @@ export type ServiceData = {
   price_mnt: number;
   duration_minutes: number;
   description?: string;
+  /** Хямдралын хувь (1-99). 0/null бол хямдралгүй. */
+  discount_percent?: number | null;
+  /** "YYYY-MM-DD" — энэ өдрийг оруулаад дуустал. null бол хугацаагүй. */
+  discount_until?: string | null;
 };
 
 /**

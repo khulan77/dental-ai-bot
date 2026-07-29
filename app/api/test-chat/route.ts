@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
 import { generateReply } from '@/lib/ai/conversation';
+import { generateBookingCode } from '@/lib/booking/code';
 import type { Clinic, Message } from '@/types/database';
 
 export async function POST(request: Request) {
@@ -62,7 +63,8 @@ customer_name: (booking as any).customer_name,   // <-- as any нэмэв
 customer_phone: (booking as any).customer_phone, // <-- as any нэмэв
 service: (booking as any).service,               // <-- as any нэмэв
 scheduled_at: (booking as any).scheduled_at,
-        status: 'confirmed',
+        status: 'pending',
+        booking_code: await generateBookingCode(),
       });
     }
 

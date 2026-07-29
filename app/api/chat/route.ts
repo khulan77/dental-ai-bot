@@ -4,6 +4,7 @@ import { notifyNewBooking } from '@/lib/notifications/booking-email';
 import { generateReply } from '@/lib/ai/conversation';
 import { chatSchema, firstZodError } from '@/lib/validation';
 import { isSlotAvailable } from '@/lib/booking/slots';
+import { generateBookingCode } from '@/lib/booking/code';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import type { Clinic } from '@/types/database';
 
@@ -63,6 +64,9 @@ export async function POST(request: Request) {
       // Давхар захиалгаас сэргийлэх — цаг сул бол л insert хийнэ
       const available = await isSlotAvailable(clinic.id, doctorId, booking.scheduled_at);
       if (available) {
+        // Чатаар авсан захиалга ч мөн эмнэлгийн баталгаажуулалт хүлээнэ
+        const bookingCode = await generateBookingCode();
+
         await supabase.from('appointments').insert({
           clinic_id: clinic.id,
           doctor_id: doctorId,
@@ -70,7 +74,8 @@ export async function POST(request: Request) {
           customer_phone: booking.customer_phone,
           service: booking.service,
           scheduled_at: booking.scheduled_at,
-          status: 'confirmed',
+          status: 'pending',
+          booking_code: bookingCode,
         });
 
         after(() =>
@@ -82,8 +87,14 @@ export async function POST(request: Request) {
             service: booking.service,
             scheduledAt: booking.scheduled_at,
             source: 'chat',
+            bookingCode,
           })
         );
+
+        // Ботын хариунд кодоо оруулж өгнө — үйлчлүүлэгч үүгээрээ шалгана
+        if (bookingCode) {
+          reply += `\n\nЗахиалгын код: ${bookingCode}. Эмнэлэг баталгаажуулсны дараа танд мэдэгдэнэ — "Захиалга шалгах" хэсгээс кодоороо эсвэл утсаараа хянаж болно.`;
+        }
       } else {
         reply =
           'Уучлаарай, энэ цаг аль хэдийн захиалагдсан байна. Өөр цаг сонгоно уу.';

@@ -38,9 +38,6 @@ export default async function HoursPage() {
         <TabLink href="/dashboard/settings/hours" active={true}>
           Ажлын цаг
         </TabLink>
-        <TabLink href="/dashboard/settings/instagram" active={false}>
-          Instagram
-        </TabLink>
       </div>
 
       <HoursManager initialHours={clinic.business_hours} />

@@ -36,7 +36,6 @@ export default async function BranchesPage() {
         <TabLink href="/dashboard/settings/services">Үйлчилгээ</TabLink>
         <TabLink href="/dashboard/settings/doctors">Эмч нар</TabLink>
         <TabLink href="/dashboard/settings/hours">Ажлын цаг</TabLink>
-        <TabLink href="/dashboard/settings/instagram">Instagram</TabLink>
       </div>
 
       <BranchesManager

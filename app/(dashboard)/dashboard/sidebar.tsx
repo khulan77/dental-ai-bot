@@ -60,12 +60,6 @@ export default function Sidebar({
         onClose={() => setOpen(false)}
       />
       <NavLink
-        href="/dashboard/conversations"
-        icon="💬"
-        label="Харилцан яриа"
-        onClose={() => setOpen(false)}
-      />
-      <NavLink
         href="/dashboard/settings"
         icon="⚙️"
         label="Тохиргоо"

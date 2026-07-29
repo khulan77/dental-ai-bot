@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { addService, updateService, deleteService } from '@/lib/db/clinic-actions';
+import { effectivePrice, isDiscountActive } from '@/lib/booking/pricing';
 
 type Service = {
   id: string;
@@ -9,7 +10,28 @@ type Service = {
   price_mnt: number;
   duration_minutes: number;
   description?: string;
+  discount_percent?: number | null;
+  discount_until?: string | null;
 };
+
+/** Формын sale талбаруудыг уншиж хэвийн утга болгоно */
+function readDiscount(formData: FormData): {
+  discount_percent: number | null;
+  discount_until: string | null;
+} {
+  const raw = (formData.get('discount_percent') as string ?? '').trim();
+  const percent = raw ? parseInt(raw, 10) : 0;
+  const until = ((formData.get('discount_until') as string) ?? '').trim();
+
+  if (!Number.isFinite(percent) || percent <= 0) {
+    return { discount_percent: null, discount_until: null };
+  }
+
+  return {
+    discount_percent: Math.min(percent, 99),
+    discount_until: until || null,
+  };
+}
 
 export default function ServicesManager({
   initialServices,
@@ -29,22 +51,19 @@ export default function ServicesManager({
 
   async function handleAdd(formData: FormData) {
     setLoading(true);
-    const result = await addService({
+    const discount = readDiscount(formData);
+    const payload = {
       name: formData.get('name') as string,
       price_mnt: parseInt(formData.get('price_mnt') as string, 10),
       duration_minutes: parseInt(formData.get('duration_minutes') as string, 10),
       description: (formData.get('description') as string) || undefined,
-    });
+      ...discount,
+    };
+    const result = await addService(payload);
 
     if (result.success) {
       // Шинэ үйлчилгээг local state-д нэмэх (UI шууд шинэчлэхэд)
-      const newService: Service = {
-        id: crypto.randomUUID(),
-        name: formData.get('name') as string,
-        price_mnt: parseInt(formData.get('price_mnt') as string, 10),
-        duration_minutes: parseInt(formData.get('duration_minutes') as string, 10),
-        description: (formData.get('description') as string) || undefined,
-      };
+      const newService: Service = { id: crypto.randomUUID(), ...payload };
       setServices([...services, newService]);
       setShowAddForm(false);
       showMessage('success', 'Үйлчилгээ амжилттай нэмэгдлээ!');
@@ -61,6 +80,7 @@ export default function ServicesManager({
       price_mnt: parseInt(formData.get('price_mnt') as string, 10),
       duration_minutes: parseInt(formData.get('duration_minutes') as string, 10),
       description: (formData.get('description') as string) || undefined,
+      ...readDiscount(formData),
     };
 
     const result = await updateService(serviceId, updates);
@@ -157,11 +177,27 @@ export default function ServicesManager({
             ) : (
               <div className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <h4 className="font-semibold text-slate-900">{service.name}</h4>
                     <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
                       {service.duration_minutes} минут
                     </span>
+                    {(service.discount_percent ?? 0) > 0 && (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded font-semibold ${
+                          isDiscountActive(service)
+                            ? 'bg-rose-100 text-rose-700'
+                            : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        🏷️ -{service.discount_percent}%
+                        {isDiscountActive(service)
+                          ? service.discount_until
+                            ? ` · ${service.discount_until} хүртэл`
+                            : ''
+                          : ' · дууссан'}
+                      </span>
+                    )}
                   </div>
                   {service.description && (
                     <p className="text-sm text-slate-500 mt-1">{service.description}</p>
@@ -169,9 +205,20 @@ export default function ServicesManager({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <p className="font-bold text-blue-600 text-lg">
-                    {service.price_mnt.toLocaleString()}₮
-                  </p>
+                  {isDiscountActive(service) ? (
+                    <p className="text-right">
+                      <span className="block text-xs text-slate-400 line-through">
+                        {service.price_mnt.toLocaleString()}₮
+                      </span>
+                      <span className="font-bold text-rose-600 text-lg">
+                        {effectivePrice(service).toLocaleString()}₮
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="font-bold text-blue-600 text-lg">
+                      {service.price_mnt.toLocaleString()}₮
+                    </p>
+                  )}
                   <div className="flex gap-1">
                     <button
                       onClick={() => setEditingId(service.id)}
@@ -263,6 +310,42 @@ function ServiceForm({
             className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+      </div>
+
+      {/* Sale — хувиар. Хоосон бол хямдралгүй. */}
+      <div className="rounded-lg border border-rose-200 bg-rose-50/60 p-3 space-y-3">
+        <p className="text-xs font-semibold text-rose-700">🏷️ Хямдрал (заавал биш)</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Хямдрал (%)
+            </label>
+            <input
+              type="number"
+              name="discount_percent"
+              min={0}
+              max={99}
+              defaultValue={initialData?.discount_percent ?? ''}
+              placeholder="20"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Дуусах огноо
+            </label>
+            <input
+              type="date"
+              name="discount_until"
+              defaultValue={initialData?.discount_until ?? ''}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+            />
+          </div>
+        </div>
+        <p className="text-[11px] text-slate-500">
+          Хувь хоосон бол хямдрал унтарна. Огноо хоосон бол хугацаагүй — өөрөө
+          устгах хүртэл сайт дээр харагдана.
+        </p>
       </div>
 
       <div>

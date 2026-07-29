@@ -107,10 +107,10 @@ export default async function DashboardPage() {
           iconBg="from-purple-500 to-pink-500"
         />
         <StatCard
-          icon="💬"
-          label="Идэвхтэй яриа"
-          value={stats.activeChats.toString()}
-          subtitle={`Нийт ${stats.totalChats}`}
+          icon="🗂️"
+          label="Нийт захиалга"
+          value={stats.totalCount.toString()}
+          subtitle={`₮${stats.totalRevenue.toLocaleString()}`}
           iconBg="from-orange-500 to-amber-500"
         />
       </div>

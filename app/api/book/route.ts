@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/db/supabase';
 import { notifyNewBooking } from '@/lib/notifications/booking-email';
 import { bookSchema, firstZodError } from '@/lib/validation';
 import { isSlotAvailable } from '@/lib/booking/slots';
+import { generateBookingCode } from '@/lib/booking/code';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
@@ -35,6 +36,9 @@ export async function POST(request: Request) {
       );
     }
 
+    // Захиалга эхлээд "хүлээгдэж буй" — эмнэлэг dashboard-аас баталгаажуулна
+    const bookingCode = await generateBookingCode();
+
     const supabase = createAdminClient();
     const { error } = await supabase.from('appointments').insert({
       clinic_id: clinicId,
@@ -44,7 +48,8 @@ export async function POST(request: Request) {
       customer_phone: customerPhone,
       service,
       scheduled_at: scheduledAt,
-      status: 'confirmed',
+      status: 'pending',
+      booking_code: bookingCode,
     });
 
     if (error) {
@@ -62,10 +67,11 @@ export async function POST(request: Request) {
         service,
         scheduledAt,
         source: 'web',
+        bookingCode,
       })
     );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, bookingCode });
   } catch (error) {
     console.error('Book error:', error);
     return NextResponse.json({ error: 'Серверийн алдаа' }, { status: 500 });

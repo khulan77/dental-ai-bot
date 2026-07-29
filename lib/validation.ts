@@ -43,6 +43,13 @@ export const bookSchema = z.object({
     }),
 });
 
+// POST /api/my-bookings — үйлчлүүлэгч захиалгаа шалгах
+// query нь утасны дугаар ЭСВЭЛ захиалгын код байна.
+export const lookupBookingSchema = z.object({
+  slug: z.string().trim().min(1).max(100),
+  query: z.string().trim().min(4, 'Утас эсвэл кодоо оруулна уу').max(20),
+});
+
 // POST /api/setup-clinic
 // userId-г ЗӨВХӨН сесс-ээс авна — оролтод байлгахгүй (өөр хүний нэрээр
 // клиник үүсгэхээс сэргийлнэ).

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Clinic } from './types';
-import { CalendarDays, Menu, X } from 'lucide-react';
+import { CalendarDays, Menu, Ticket, X } from 'lucide-react';
 
 export default function Nav({
   clinic,
@@ -26,7 +26,8 @@ export default function Nav({
         scrolled ? 'border-b border-[var(--site-line)]' : 'border-b border-transparent'
       }`}
     >
-      <div className="site-container px-5 sm:px-8 h-16 flex items-center justify-between">
+      {/* Hero-гийн 1120px контейнераас 48px-ээр гадуур — лого, товч арай захдаа */}
+      <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
 
         {/* Лого */}
         <div className="flex items-center gap-2.5">
@@ -41,7 +42,14 @@ export default function Nav({
         </div>
 
         {/* Desktop CTA */}
-        <div className="hidden sm:flex items-center">
+        <div className="hidden sm:flex items-center gap-3">
+          <a
+            href={`/c/${clinic.slug}/booking`}
+            className="inline-flex items-center gap-1.5 rounded-[var(--site-r-btn)] border border-[var(--site-line)] px-3.5 py-2 text-[13px] font-semibold text-[var(--site-ink-soft)] hover:border-[var(--site-accent)] hover:text-[var(--site-accent)] transition-colors"
+          >
+            <Ticket className="w-3.5 h-3.5" />
+            Захиалга шалгах
+          </a>
           <button onClick={onBookClick} className="site-btn">
             <CalendarDays className="w-4 h-4" />
             Цаг авах
@@ -61,7 +69,7 @@ export default function Nav({
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="sm:hidden bg-white border-t border-[var(--site-line)] px-5 py-4">
+        <div className="sm:hidden bg-white border-t border-[var(--site-line)] w-full max-w-[1280px] mx-auto px-5 sm:px-8 py-4 space-y-2">
           <button
             onClick={() => { onBookClick(); setMenuOpen(false); }}
             className="site-btn w-full"
@@ -69,6 +77,13 @@ export default function Nav({
             <CalendarDays className="w-4 h-4" />
             Цаг авах
           </button>
+          <a
+            href={`/c/${clinic.slug}/booking`}
+            className="site-btn-outline w-full"
+          >
+            <Ticket className="w-4 h-4" />
+            Захиалга шалгах
+          </a>
         </div>
       )}
     </header>

@@ -4,6 +4,10 @@ export type Service = {
   price_mnt: number;
   duration_minutes: number;
   description?: string;
+  /** Хямдралын хувь (1-99). 0 эсвэл хоосон бол хямдралгүй. */
+  discount_percent?: number | null;
+  /** "YYYY-MM-DD" — энэ өдрийг оруулаад дуустал. Хоосон бол хугацаагүй. */
+  discount_until?: string | null;
 };
 
 export type DayHours = {
@@ -27,7 +31,6 @@ export type Message = {
   timestamp: string;
 };
 
-export type ConversationStatus = 'active' | 'booked' | 'lost';
 export type AppointmentStatus =
   | 'confirmed'
   | 'reminded'
@@ -39,8 +42,6 @@ export type Clinic = {
   id: string;
   name: string;
   slug: string;
-  instagram_page_id: string | null;
-  meta_page_access_token: string | null;
   google_calendar_id: string | null;
   google_refresh_token: string | null;
   business_hours: BusinessHours;
@@ -60,19 +61,6 @@ export type Clinic = {
   cover_image_url: string | null;
 };
 
-export type Conversation = {
-  id: string;
-  clinic_id: string;
-  customer_messenger_id: string;
-  customer_name: string | null;
-  customer_phone: string | null;
-  channel: 'instagram' | 'messenger';
-  messages: Message[];
-  status: ConversationStatus;
-  last_message_at: string;
-  created_at: string;
-};
-
 export type Branch = {
   id: string;
   clinic_id: string;
@@ -89,7 +77,6 @@ export type Appointment = {
   id: string;
   clinic_id: string;
   branch_id: string | null;
-  conversation_id: string | null;
   customer_name: string;
   customer_phone: string | null;
   service: string | null;

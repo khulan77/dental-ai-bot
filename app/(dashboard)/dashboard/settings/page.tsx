@@ -41,9 +41,6 @@ export default async function SettingsPage() {
         <TabLink href="/dashboard/settings/hours">
           Ажлын цаг
         </TabLink>
-        <TabLink href="/dashboard/settings/instagram">
-          Instagram
-        </TabLink>
       </div>
 
       <ClinicInfoForm clinic={clinic} />

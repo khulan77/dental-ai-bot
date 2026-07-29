@@ -3,6 +3,7 @@ import type { Clinic, Message } from '@/types/database';
 import { findCachedReply, cacheReply } from './cache';
 import { getAvailableSlotsForBot } from '@/lib/booking/slots';
 import { addClinicDays, clinicDateISO } from '@/lib/booking/timezone';
+import { effectivePrice, isDiscountActive } from '@/lib/booking/pricing';
 import { createAdminClient } from '@/lib/db/supabase';
 
 export type BookingData = {
@@ -15,8 +16,20 @@ export type BookingData = {
 };
 
 function buildSystemPrompt(clinic: Clinic): string {
+  // Хямдралтай үйлчилгээг ботод тусад нь заана — хуучин үнээр хэлэхээс сэргийлнэ
   const servicesList = clinic.services
-    .map(s => `- ${s.name}: ${s.price_mnt.toLocaleString()}₮ (${s.duration_minutes} минут)`)
+    .map(s => {
+      const base = `- ${s.name}: `;
+      const duration = ` (${s.duration_minutes} минут)`;
+      if (!isDiscountActive(s)) {
+        return `${base}${s.price_mnt.toLocaleString()}₮${duration}`;
+      }
+      const until = s.discount_until ? `, ${s.discount_until} хүртэл` : '';
+      return (
+        `${base}ХЯМДРАЛТАЙ ${effectivePrice(s).toLocaleString()}₮ ` +
+        `(хуучин үнэ ${s.price_mnt.toLocaleString()}₮, -${s.discount_percent}%${until})${duration}`
+      );
+    })
     .join('\n');
 
   const hoursList = Object.entries(clinic.business_hours)
@@ -68,7 +81,9 @@ ${hoursList}
 ДҮРМҮҮД:
 1. Зөвхөн монгол хэлээр хариул
 2. Товч (1-3 өгүүлбэр), эелдэг найрсаг
-3. Үйлчилгээний үнэ, цагийг л өгсөн мэдээллээс хариул, үнэгүй санал болгохгүй
+3. Үйлчилгээний үнэ, цагийг л өгсөн мэдээллээс хариул, үнэгүй санал болгохгүй.
+   ХЯМДРАЛТАЙ гэж тэмдэглэсэн үйлчилгээг заавал хямдарсан үнээр нь хэл, хямдралыг нь дурд
+5.1. Захиалга үүсмэгц ШУУД баталгаажихгүй — эмнэлэг баталгаажуулна гэдгийг хэлж өг
 4. Цаг сонгоход ӨГСӨН СУЛ ЦАГУУДААС л санал болго (өөр цаг бодож болохгүй)
 5. Эмчийн талаар зөвхөн ӨГСӨН ЭМЧ НАРЫН МЭДЭЭЛЛЭЭС хариул
 

@@ -13,14 +13,14 @@ export type BookingNotification = {
   customerPhone: string | null;
   service: string | null;
   scheduledAt: string;
-  source: 'web' | 'chat' | 'instagram' | 'messenger';
+  source: 'web' | 'chat';
+  /** Үйлчлүүлэгчид өгсөн богино код — эмнэлэг захиалгыг олоход хэрэглэнэ */
+  bookingCode?: string | null;
 };
 
 const SOURCE_LABELS: Record<BookingNotification['source'], string> = {
   web: 'Вэб сайт',
   chat: 'AI чат',
-  instagram: 'Instagram',
-  messenger: 'Messenger',
 };
 
 function formatDateTime(iso: string): string {
@@ -39,6 +39,7 @@ function buildHtml(b: BookingNotification, appUrl: string): string {
     ['Эмч', b.doctorName ?? 'Тодорхойгүй'],
     ['Цаг', formatDateTime(b.scheduledAt)],
     ['Эх сурвалж', SOURCE_LABELS[b.source]],
+    ...(b.bookingCode ? ([['Захиалгын код', b.bookingCode]] as [string, string][]) : []),
   ];
 
   const rowsHtml = rows
@@ -54,7 +55,14 @@ function buildHtml(b: BookingNotification, appUrl: string): string {
   return `
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:24px;">
   <h2 style="margin:0 0 4px;color:#0f172a;font-size:20px;">Шинэ цаг захиалга</h2>
-  <p style="margin:0 0 20px;color:#64748b;font-size:14px;">${escapeHtml(b.clinicName)}</p>
+  <p style="margin:0 0 16px;color:#64748b;font-size:14px;">${escapeHtml(b.clinicName)}</p>
+
+  <div style="margin:0 0 20px;padding:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
+    <span style="color:#b45309;font-size:14px;font-weight:600;">⏳ Баталгаажуулалт хүлээж байна</span>
+    <span style="display:block;margin-top:2px;color:#92400e;font-size:13px;">
+      Dashboard дээрээс баталгаажуулж өгнө үү — үйлчлүүлэгч төлөвөө онлайнаар хардаг.
+    </span>
+  </div>
 
   <table style="width:100%;border-collapse:collapse;border-top:1px solid #e2e8f0;">
     ${rowsHtml}
@@ -63,7 +71,7 @@ function buildHtml(b: BookingNotification, appUrl: string): string {
   <a href="${appUrl}/dashboard/appointments"
      style="display:inline-block;margin-top:24px;padding:10px 20px;background:#2563eb;color:#fff;
             text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
-    Захиалгуудыг харах
+    Захиалга баталгаажуулах
   </a>
 
   <p style="margin:24px 0 0;color:#94a3b8;font-size:12px;">
@@ -89,6 +97,7 @@ export async function notifyNewBooking(input: {
   service: string | null;
   scheduledAt: string;
   source: BookingNotification['source'];
+  bookingCode?: string | null;
 }): Promise<void> {
   try {
     const supabase = createAdminClient();
@@ -122,6 +131,7 @@ export async function notifyNewBooking(input: {
       service: input.service,
       scheduledAt: input.scheduledAt,
       source: input.source,
+      bookingCode: input.bookingCode ?? null,
     });
   } catch (e) {
     console.error('Мэдэгдэл бэлтгэхэд алдаа:', e);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Calendar, Clock, User, Phone, Check, MapPin } from 'lucide-react';
 import type { Doctor, Service, Branch } from './types';
+import { effectivePrice, isDiscountActive } from '@/lib/booking/pricing';
 import {
   addClinicDays,
   clinicDateISO,
@@ -13,6 +14,8 @@ import {
 type Props = {
   doctor: Doctor;
   clinicId: string;
+  /** Захиалга шалгах хуудас руу холбоход хэрэгтэй */
+  clinicSlug: string;
   services: Service[];
   branches?: Branch[];
   /** Doctors хэсэгт салбар аль хэдийн сонгогдсон бол — modal дахин асуухгүй */
@@ -23,7 +26,7 @@ type Props = {
 
 const DAY_NAMES = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
 
-export default function BookingModal({ doctor, clinicId, services, branches = [], preselectedBranchId, initialService, onClose }: Props) {
+export default function BookingModal({ doctor, clinicId, clinicSlug, services, branches = [], preselectedBranchId, initialService, onClose }: Props) {
   const doctorServices =
     doctor.service_ids && doctor.service_ids.length > 0
       ? services.filter(s => doctor.service_ids!.includes(s.id))
@@ -62,6 +65,7 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
   const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [bookingCode, setBookingCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -104,6 +108,7 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
     });
     const data = await res.json();
     if (data.error) { setError(data.error); setLoading(false); return; }
+    setBookingCode(data.bookingCode ?? null);
     setDone(true);
     setLoading(false);
   }
@@ -115,10 +120,25 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
           className="site-card w-full max-w-sm p-8 text-center"
           onClick={e => e.stopPropagation()}
         >
-          <div className="w-12 h-12 rounded-full bg-[var(--site-accent-soft)] text-[var(--site-accent)] flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-[var(--site-r-pill)] bg-[var(--site-warn-soft)] border border-[var(--site-warn-line)] text-[var(--site-warn)] flex items-center justify-center mx-auto mb-4">
             <Check className="w-6 h-6" />
           </div>
-          <h3 className="site-h2 text-[22px] mb-5">Захиалга баталгаажлаа</h3>
+          <h3 className="site-h2 text-[22px] mb-2">Захиалга хүлээн авлаа</h3>
+          <p className="site-body mb-5">
+            Эмнэлэг баталгаажуулмагц таны захиалгын төлөв «Баталгаажсан» болно.
+          </p>
+
+          {bookingCode && (
+            <div className="rounded-[var(--site-r-btn)] bg-[var(--site-bg-soft)] border border-[var(--site-line)] px-4 py-4 mb-5">
+              <div className="text-[12px] text-[var(--site-muted)] mb-1">Захиалгын код</div>
+              <div className="text-[26px] font-bold tracking-[0.18em] text-[var(--site-ink)] font-mono">
+                {bookingCode}
+              </div>
+              <div className="text-[12px] text-[var(--site-muted)] mt-1.5">
+                Энэ кодоо хадгална уу — захиалгаа шалгахад хэрэглэнэ
+              </div>
+            </div>
+          )}
 
           <div className="rounded-[var(--site-r-btn)] border border-[var(--site-line)] divide-y divide-[var(--site-line)] text-left mb-6">
             {[
@@ -137,10 +157,17 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
             ))}
           </div>
 
-          <p className="site-body mb-5">Удахгүй танд холбогдох болно.</p>
-          <button onClick={onClose} className="site-btn w-full">
-            Хаах
-          </button>
+          <div className="space-y-2">
+            <a
+              href={`/c/${clinicSlug}/booking${bookingCode ? `?code=${bookingCode}` : ''}`}
+              className="site-btn w-full"
+            >
+              Захиалгаа шалгах
+            </a>
+            <button onClick={onClose} className="site-btn-outline w-full">
+              Хаах
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -224,9 +251,20 @@ export default function BookingModal({ doctor, clinicId, services, branches = []
                   className="site-option w-full flex items-center justify-between p-3.5"
                 >
                   <span className="text-[14px] font-medium text-[var(--site-ink)]">{s.name}</span>
-                  <span className="text-[14px] font-semibold text-[var(--site-accent)] ml-2 shrink-0">
-                    {s.price_mnt.toLocaleString()}₮
-                  </span>
+                  {isDiscountActive(s) ? (
+                    <span className="ml-2 shrink-0 text-right">
+                      <span className="block text-[12px] text-[var(--site-muted)] line-through leading-none">
+                        {s.price_mnt.toLocaleString()}₮
+                      </span>
+                      <span className="text-[14px] font-semibold text-[var(--site-sale)]">
+                        {effectivePrice(s).toLocaleString()}₮
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-[14px] font-semibold text-[var(--site-accent)] ml-2 shrink-0">
+                      {s.price_mnt.toLocaleString()}₮
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

@@ -9,12 +9,22 @@ import {
   clinicMinutesOfDay,
 } from './timezone';
 
+/**
+ * Цагийг эзэлсэнд тооцох төлөвүүд.
+ *
+ * 'pending' нь эмнэлэг хараахан баталгаажуулаагүй ч тухайн цагийг барина —
+ * эс тэгвэл хоёр хүн нэг цагт "хүлээгдэж буй" захиалга үүсгэчихнэ.
+ */
+export const OCCUPIED_STATUSES = ['pending', 'confirmed', 'reminded'] as const;
+
 export type TimeSlot = {
   start: string;
   end: string;
   available: boolean;
   appointmentId?: string;
   customerName?: string;
+  /** Захиалгын төлөв — 'pending' бол эмнэлэг хараахан баталгаажуулаагүй */
+  status?: string;
 };
 
 export type DoctorInfo = {
@@ -62,7 +72,7 @@ export async function isSlotAvailable(
     .eq('clinic_id', clinicId)
     .gte('scheduled_at', dayStart.toISOString())
     .lt('scheduled_at', dayEnd.toISOString())
-    .in('status', ['confirmed', 'reminded']);
+    .in('status', OCCUPIED_STATUSES);
 
   if (doctorId) {
     query = query.eq('doctor_id', doctorId);
@@ -139,11 +149,11 @@ export async function getDoctorDaySchedule(
     .eq('doctor_id', doctorId)
     .gte('scheduled_at', dayStart.toISOString())
     .lt('scheduled_at', dayEnd.toISOString())
-    .in('status', ['confirmed', 'reminded']);
+    .in('status', OCCUPIED_STATUSES);
 
   const slots = generateSlots(dateISO, dayHours.open, dayHours.close);
 
-  const bookedSlots = new Map<string, { id: string; name: string }>();
+  const bookedSlots = new Map<string, { id: string; name: string; status: string }>();
 
   (appointments ?? []).forEach(apt => {
     // Захиалгын цагийг эмнэлгийн бүсээр — эс бөгөөс slot түлхүүр таарахгүй
@@ -158,6 +168,7 @@ export async function getDoctorDaySchedule(
         bookedSlots.set(slots[startIdx + i].start, {
           id: apt.id,
           name: apt.customer_name,
+          status: apt.status,
         });
       }
     }
@@ -170,6 +181,7 @@ export async function getDoctorDaySchedule(
       available: !booked,
       appointmentId: booked?.id,
       customerName: booked?.name,
+      status: booked?.status,
     };
   });
 
@@ -361,11 +373,11 @@ export async function getDaySchedule(clinicId: string, date: Date): Promise<DayS
     .eq('clinic_id', clinicId)
     .gte('scheduled_at', dayStart.toISOString())
     .lt('scheduled_at', dayEnd.toISOString())
-    .in('status', ['confirmed', 'reminded']);
+    .in('status', OCCUPIED_STATUSES);
 
   const slots = generateSlots(dateISO, dayHours.open, dayHours.close);
 
-  const bookedSlots = new Map<string, { id: string; name: string }>();
+  const bookedSlots = new Map<string, { id: string; name: string; status: string }>();
   (appointments ?? []).forEach(apt => {
     // Захиалгын цагийг эмнэлгийн бүсээр — эс бөгөөс slot түлхүүр таарахгүй
     const aptTime = clinicHHMM(new Date(apt.scheduled_at));
@@ -377,6 +389,7 @@ export async function getDaySchedule(clinicId: string, date: Date): Promise<DayS
         bookedSlots.set(slots[startIdx + i].start, {
           id: apt.id,
           name: apt.customer_name,
+          status: apt.status,
         });
       }
     }
@@ -389,6 +402,7 @@ export async function getDaySchedule(clinicId: string, date: Date): Promise<DayS
       available: !booked,
       appointmentId: booked?.id,
       customerName: booked?.name,
+      status: booked?.status,
     };
   });
 

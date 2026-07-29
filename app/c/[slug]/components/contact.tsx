@@ -1,7 +1,27 @@
 'use client';
 
 import type { Clinic, Branch } from './types';
-import { MapPin, Phone, CalendarDays, MessageCircle } from 'lucide-react';
+import { MapPin, Phone, CalendarDays, MessageCircle, Mail, Globe } from 'lucide-react';
+import CheckBookingBand from './check-booking-band';
+
+// lucide-react брэндийн лого агуулахаа больсон тул inline SVG
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z" />
+    </svg>
+  );
+}
+
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 const QUICK_QUESTIONS = [
   'Өдөрт хэдэн удаа шүдээ угаах хэрэгтэй вэ?',
@@ -24,6 +44,13 @@ export default function Contact({
 }) {
   const phone = clinic.owner_phone;
   const hasBranches = branches.length > 0;
+
+  // Footer-ийн "Холбоо барих" багана — бүхэлдээ Тохиргоо хэсгийн өгөгдлөөс
+  const socials = [
+    clinic.facebook_url && { icon: FacebookIcon, label: 'Facebook', href: clinic.facebook_url },
+    clinic.instagram_url && { icon: InstagramIcon, label: 'Instagram', href: clinic.instagram_url },
+    clinic.website && { icon: Globe, label: 'Веб сайт', href: clinic.website },
+  ].filter(Boolean) as { icon: (p: { className?: string }) => React.ReactNode; label: string; href: string }[];
 
   return (
     <>
@@ -130,6 +157,9 @@ export default function Contact({
         </div>
       </section>
 
+      {/* ── Захиалга шалгах зурвас ── */}
+      <CheckBookingBand slug={clinic.slug} />
+
       {/* ── FOOTER ── */}
       <footer className="bg-white border-t border-[var(--site-line)] px-5 sm:px-8 pt-16 pb-8">
         <div className="site-container">
@@ -184,21 +214,44 @@ export default function Contact({
                     <span className="text-[13px] text-[var(--site-muted)] group-hover:text-[var(--site-accent)] transition-colors">{phone}</span>
                   </a>
                 )}
-                {clinic.address && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 group"
-                  >
-                    <MapPin className="w-4 h-4 text-[var(--site-muted)] shrink-0 mt-0.5" />
-                    <span className="text-[13px] text-[var(--site-muted)] group-hover:text-[var(--site-accent)] transition-colors leading-relaxed">{clinic.address}</span>
+
+                {clinic.owner_email && (
+                  <a href={`mailto:${clinic.owner_email}`} className="flex items-center gap-3 group">
+                    <Mail className="w-4 h-4 text-[var(--site-muted)] shrink-0" />
+                    <span className="text-[13px] text-[var(--site-muted)] group-hover:text-[var(--site-accent)] transition-colors break-all">{clinic.owner_email}</span>
                   </a>
                 )}
+             
+
+                {/* Сошиал, веб — Тохиргоо → Үндсэн */}
+                {socials.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {socials.map(s => (
+                      <a
+                        key={s.label}
+                        href={s.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={s.label}
+                        title={s.label}
+                        className="w-9 h-9 flex items-center justify-center rounded-[var(--site-r-btn)] border border-[var(--site-line)] text-[var(--site-muted)] hover:text-[var(--site-accent)] hover:border-[var(--site-accent)] transition-colors"
+                      >
+                        <s.icon className="w-4 h-4" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+
                 <button onClick={onBookClick} className="site-btn mt-1">
                   <CalendarDays className="w-4 h-4" />
                   Цаг захиалах
                 </button>
+                <a
+                  href={`/c/${clinic.slug}/booking`}
+                  className="block text-[13px] font-medium text-[var(--site-muted)] hover:text-[var(--site-accent)] transition-colors"
+                >
+                  Захиалгаа шалгах →
+                </a>
               </div>
             </div>
           </div>
@@ -209,7 +262,7 @@ export default function Contact({
               © {new Date().getFullYear()} {clinic.name}. Бүх эрх хамгаалагдсан.
             </p>
             <p className="text-[12px] text-[var(--site-muted)]">
-              Powered by <span className="font-semibold text-[var(--site-accent)]">Dental AI</span>
+              Powered by <span className="font-semibold text-[var(--site-accent)]">Dental Clinic</span>
             </p>
           </div>
         </div>

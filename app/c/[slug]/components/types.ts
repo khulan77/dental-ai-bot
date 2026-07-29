@@ -3,6 +3,10 @@ export type Service = {
   name: string;
   price_mnt: number;
   duration_minutes: number;
+  /** Хямдралын хувь (1-99). 0 эсвэл хоосон бол хямдралгүй. */
+  discount_percent?: number | null;
+  /** "YYYY-MM-DD" — энэ өдрийг оруулаад дуустал. Хоосон бол хугацаагүй. */
+  discount_until?: string | null;
 };
 
 export type Doctor = {
@@ -22,6 +26,20 @@ export type Branch = {
   phone: string | null;
 };
 
+/** Тохиргоо → Ажлын цаг хэсгээс ирдэг өдрийн цаг */
+export type DayHours = { open: string; close: string } | null;
+
+export type BusinessHours = {
+  mon: DayHours;
+  tue: DayHours;
+  wed: DayHours;
+  thu: DayHours;
+  fri: DayHours;
+  sat: DayHours;
+  sun: DayHours;
+};
+
+/** Бүх талбар нь Тохиргоо (/dashboard/settings) хэсгээс удирдагдана */
 export type Clinic = {
   id: string;
   name: string;
@@ -29,7 +47,10 @@ export type Clinic = {
   about: string | null;
   address: string | null;
   owner_phone: string | null;
+  owner_email: string | null;
+  website: string | null;
   facebook_url: string | null;
   instagram_url: string | null;
+  business_hours: BusinessHours | null;
   services: Service[] | null;
 };

@@ -253,6 +253,23 @@ body {
   --site-accent: #1D4ED8;
   --site-accent-hover: #1E40AF;
   --site-accent-soft: #EFF6FF;
+  --site-accent-deep: #172554;
+
+  /* Төлөвийн өнгө — ЗӨВХӨН захиалгын статус, хямдралд.
+     Эдгээрээс өөр өнгө component дотор бичихгүй. */
+  --site-warn: #B45309;
+  --site-warn-soft: #FFFBEB;
+  --site-warn-line: #FDE68A;
+
+  --site-ok: #047857;
+  --site-ok-soft: #ECFDF5;
+  --site-ok-line: #A7F3D0;
+
+  --site-danger: #BE123C;
+  --site-danger-soft: #FFF1F2;
+  --site-danger-line: #FECDD3;
+
+  --site-sale: #E11D48;
 
   /* Радиус — гурав л байна */
   --site-r-btn: 10px;
@@ -461,6 +478,138 @@ body {
     border: 1px solid var(--site-line);
     color: var(--site-muted);
   }
+
+  /* Хямдралын тэмдэг */
+  .site-sale-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--site-r-pill);
+    background: var(--site-sale);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Төлөвийн тэмдэг (захиалгын статус) ── */
+  .site-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--site-r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .site-status-wait {
+    background: var(--site-warn-soft);
+    border-color: var(--site-warn-line);
+    color: var(--site-warn);
+  }
+  .site-status-ok {
+    background: var(--site-ok-soft);
+    border-color: var(--site-ok-line);
+    color: var(--site-ok);
+  }
+  .site-status-off {
+    background: var(--site-bg-soft);
+    border-color: var(--site-line);
+    color: var(--site-muted);
+  }
+  .site-status-bad {
+    background: var(--site-danger-soft);
+    border-color: var(--site-danger-line);
+    color: var(--site-danger);
+  }
+
+  /* ── Гүн өнгөтэй толгой зурвас (захиалга шалгах хуудас) ── */
+  .site-band {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 380px at 12% -30%, rgba(255, 255, 255, 0.16), transparent 60%),
+      linear-gradient(135deg, var(--site-accent) 0%, var(--site-accent-deep) 100%);
+    color: #fff;
+  }
+  /* Нарийн торон дэвсгэр — гүн өнгөн дээр гүнзгийрүүлэлт өгнө */
+  .site-band::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+    pointer-events: none;
+  }
+  .site-band-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Гүн зурвас дээр тавих цайвар товч */
+  .site-btn-invert {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--site-r-btn);
+    background: #fff;
+    color: var(--site-accent);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .site-btn-invert:hover { background: var(--site-accent-soft); }
+
+  /* Зурвасан дээр хөвж буй карт */
+  .site-card-float {
+    background: var(--site-bg);
+    border: 1px solid var(--site-line);
+    border-radius: var(--site-r-card);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  }
+
+  /* ── Явцын алхмууд (захиалга авсан → баталгаажсан → дууссан) ── */
+  .site-step-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--site-r-pill);
+    border: 1px solid var(--site-line);
+    background: var(--site-bg);
+    color: var(--site-muted);
+    flex-shrink: 0;
+  }
+  .site-step-dot[data-state='done'] {
+    background: var(--site-ok-soft);
+    border-color: var(--site-ok-line);
+    color: var(--site-ok);
+  }
+  .site-step-dot[data-state='current'] {
+    background: var(--site-warn-soft);
+    border-color: var(--site-warn-line);
+    color: var(--site-warn);
+  }
+  .site-step-dot[data-state='dead'] {
+    background: var(--site-danger-soft);
+    border-color: var(--site-danger-line);
+    color: var(--site-danger);
+  }
+  .site-step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--site-line);
+    border-radius: 2px;
+  }
+  .site-step-line[data-state='done'] { background: var(--site-ok-line); }
 
 }
 /* Premium reveals */
