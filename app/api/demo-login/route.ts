@@ -24,11 +24,13 @@ export async function POST(request: Request) {
 
   const supabase = await createServerSupabase();
 
-  // Аль хэдийн нэвтэрсэн бол сесс нь бүү хөндөгдөг — өөрийнх нь самбар руу
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user && user.email !== DEMO_EMAIL) {
-    return NextResponse.redirect(new URL('/dashboard', request.url), 303);
-  }
+  // Өөр бүртгэлээр нэвтэрсэн байсан ч демог үзүүлнэ — товч дээр "демо" гэж
+  // бичсэн байхад өөрийнх нь самбар гарч ирвэл ойлгомжгүй.
+  //
+  // scope: 'local' — зөвхөн энэ браузерын cookie цэвэрлэнэ. Default scope нь
+  // refresh token-ыг серверээс хүчингүй болгож, бусад төхөөрөмж дээрх сессийг
+  // нь бас таслах байсан.
+  await supabase.auth.signOut({ scope: 'local' });
 
   const { error } = await supabase.auth.signInWithPassword({
     email: DEMO_EMAIL,
