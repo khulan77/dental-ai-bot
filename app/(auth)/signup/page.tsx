@@ -159,7 +159,7 @@ export default function SignupPage() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl shadow-sm">
             🦷
           </div>
-          <h1 className="text-2xl font-bold">Dental AI</h1>
+          <h1 className="text-2xl font-bold">Dental clinic</h1>
         </div>
         <p className="text-sm text-slate-500">Шинэ клиник бүртгэх</p>
       </div>

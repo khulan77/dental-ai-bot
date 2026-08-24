@@ -8,6 +8,7 @@ type Service = {
   id: string;
   name: string;
   price_mnt: number;
+  image_url?: string | null;
   duration_minutes: number;
   description?: string;
   discount_percent?: number | null;
@@ -55,6 +56,7 @@ export default function ServicesManager({
     const payload = {
       name: formData.get('name') as string,
       price_mnt: parseInt(formData.get('price_mnt') as string, 10),
+      image_url: ((formData.get('image_url') as string) ?? '').trim() || null,
       duration_minutes: parseInt(formData.get('duration_minutes') as string, 10),
       description: (formData.get('description') as string) || undefined,
       ...discount,
@@ -78,6 +80,7 @@ export default function ServicesManager({
     const updates = {
       name: formData.get('name') as string,
       price_mnt: parseInt(formData.get('price_mnt') as string, 10),
+      image_url: ((formData.get('image_url') as string) ?? '').trim() || null,
       duration_minutes: parseInt(formData.get('duration_minutes') as string, 10),
       description: (formData.get('description') as string) || undefined,
       ...readDiscount(formData),
@@ -175,8 +178,20 @@ export default function ServicesManager({
                 />
               </div>
             ) : (
-              <div className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
-                <div className="flex-1">
+              <div className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition">
+                {service.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={service.image_url}
+                    alt=""
+                    className="w-14 h-14 rounded-lg object-cover border border-slate-200 shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-300 text-xl shrink-0">
+                    🦷
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h4 className="font-semibold text-slate-900">{service.name}</h4>
                     <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
@@ -265,6 +280,8 @@ function ServiceForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      <ImagePicker initialUrl={initialData?.image_url ?? null} />
+
       <div>
         <label className="block text-xs font-medium text-slate-700 mb-1">
           Үйлчилгээний нэр
@@ -378,5 +395,87 @@ function ServiceForm({
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Үйлчилгээний зураг сонгох. Файлыг шууд /api/upload руу илгээгээд
+ * буцаж ирсэн URL-ыг нуувч талбарт хийнэ — форм илгээхэд түүнийг л
+ * хадгална (файл өөрөө server action-аар дамжихгүй).
+ */
+function ImagePicker({ initialUrl }: { initialUrl: string | null }) {
+  const [url, setUrl] = useState<string | null>(initialUrl);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Байршуулж чадсангүй');
+      setUrl(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Байршуулж чадсангүй');
+    } finally {
+      setUploading(false);
+      e.target.value = '';   // ижил файлыг дахин сонгож болохын тулд
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-slate-700 mb-1">
+        Зураг <span className="text-slate-400">(заавал биш)</span>
+      </label>
+
+      <input type="hidden" name="image_url" value={url ?? ''} />
+
+      <div className="flex items-center gap-3">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt=""
+            className="w-20 h-20 rounded-lg object-cover border border-slate-200 shrink-0"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-lg bg-white border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-300 text-2xl shrink-0">
+            🦷
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <label className="inline-block px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition">
+            {uploading ? 'Байршуулж байна...' : url ? 'Зураг солих' : 'Зураг сонгох'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFile}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+          {url && (
+            <button
+              type="button"
+              onClick={() => setUrl(null)}
+              className="block text-xs text-slate-400 hover:text-red-600 transition"
+            >
+              Устгах
+            </button>
+          )}
+          <p className="text-[11px] text-slate-400">JPG, PNG, WEBP · 3MB хүртэл</p>
+        </div>
+      </div>
+
+      {error && <p className="text-xs text-red-600 mt-1.5">⚠️ {error}</p>}
+    </div>
   );
 }

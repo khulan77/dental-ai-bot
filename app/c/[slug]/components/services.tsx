@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { Service } from './types';
 import { effectivePrice, isDiscountActive } from '@/lib/booking/pricing';
 import { Clock, ArrowRight, Sparkles, Smile, Stethoscope, Syringe, Gem, Activity } from 'lucide-react';
@@ -36,20 +37,36 @@ export default function Services({
               <button
                 key={service.id}
                 onClick={() => onServiceClick(service)}
-                className="site-card site-card-hover text-left p-6 flex flex-col relative"
+                className="site-card site-card-hover text-left flex flex-col relative overflow-hidden"
               >
                 {onSale && (
-                  <span className="site-sale-badge absolute top-4 right-4">
+                  <span className="site-sale-badge absolute top-4 right-4 z-10">
                     -{service.discount_percent}%
                   </span>
                 )}
 
-                <div className="flex items-start justify-between mb-5">
-                  <div className="site-icon-tile">
-                    <Icon className="w-[18px] h-[18px]" />
+                {/* Эмнэлэг зураг оруулсан бол түүнийг, үгүй бол дүрсийг */}
+                {service.image_url && (
+                  <div className="relative aspect-[16/10] bg-[var(--site-bg-soft)]">
+                    <Image
+                      src={service.image_url}
+                      alt={service.name}
+                      fill
+                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover"
+                    />
                   </div>
+                )}
+
+                <div className="p-6 flex flex-col flex-1">
+                <div className="flex items-start justify-between mb-5">
+                  {!service.image_url && (
+                    <div className="site-icon-tile">
+                      <Icon className="w-[18px] h-[18px]" />
+                    </div>
+                  )}
                   {!onSale && (
-                    <span className="site-pill">
+                    <span className="site-pill ml-auto">
                       <Clock className="w-3 h-3" />
                       {service.duration_minutes} мин
                     </span>
@@ -87,6 +104,7 @@ export default function Services({
                     Цаг захиалах
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
+                </div>
                 </div>
               </button>
             );

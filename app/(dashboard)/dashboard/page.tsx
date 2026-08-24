@@ -5,8 +5,10 @@ import {
   getCacheStats,
   getRecentActivity,
   getDoctorStats,
+  getPendingCount,
 } from "@/lib/dashboard/stats";
 import { getOnboardingProgress } from "@/lib/dashboard/onboarding";
+import Link from "next/link";
 import WeeklyChart from "./weekly-chart";
 import TopCustomersList from "./top-customers";
 import CacheStatsCard from "./cache-stats";
@@ -46,7 +48,7 @@ export default async function DashboardPage() {
   }
 
   // Бүгд дууссан бол жинхэнэ dashboard харуулна
-  const [stats, weeklyTrend, topCustomers, cacheStats, activity, doctorStats] =
+  const [stats, weeklyTrend, topCustomers, cacheStats, activity, doctorStats, pendingCount] =
     await Promise.all([
       getDashboardStats(clinic.id),
       getWeeklyTrend(clinic.id),
@@ -54,6 +56,7 @@ export default async function DashboardPage() {
       getCacheStats(clinic.id),
       getRecentActivity(clinic.id, 8),
       getDoctorStats(clinic.id),
+      getPendingCount(clinic.id),
     ]);
 
   const now = new Date();
@@ -63,22 +66,30 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-7xl space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+      {/* Header — нэг мөр, гар утсанд ч багтана */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             {greeting} 👋
           </h1>
-          <p className="text-slate-500 mt-2">
-            Танай AI ассистент өнөөдөр хичээнгүйлэн ажиллаж байна
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-slate-400">Өнөөдөр</p>
-          <p className="text-lg font-semibold text-slate-700">
+          <p className="text-[13px] text-slate-400 mt-0.5 truncate">
             {clinicLongDate(now)}
           </p>
         </div>
+
+        {pendingCount > 0 && (
+          <Link
+            href="/dashboard/appointments"
+            className="shrink-0 inline-flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition"
+          >
+            <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[11px] font-semibold flex items-center justify-center tabular-nums">
+              {pendingCount > 99 ? '99+' : pendingCount}
+            </span>
+            <span className="text-[13px] font-medium whitespace-nowrap">
+              шинэ захиалга
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Stat Cards */}

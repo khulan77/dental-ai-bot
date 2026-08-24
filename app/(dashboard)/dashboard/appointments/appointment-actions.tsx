@@ -20,8 +20,8 @@ function actionsFor(status: string): Action[] {
       return [
         {
           status: 'confirmed',
-          label: '✓ Баталгаажуулах',
-          className: 'bg-emerald-600 text-white hover:bg-emerald-700',
+          label: 'Баталгаажуулах',
+          className: 'border border-emerald-300 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50',
         },
         {
           status: 'cancelled',
@@ -35,8 +35,8 @@ function actionsFor(status: string): Action[] {
       return [
         {
           status: 'completed',
-          label: '✓ Дуусгах',
-          className: 'bg-slate-800 text-white hover:bg-slate-900',
+          label: 'Дуусгах',
+          className: 'border border-sky-300 text-sky-700 bg-sky-50/50 hover:bg-sky-50',
         },
         {
           status: 'no_show',
@@ -87,13 +87,13 @@ export default function AppointmentActions({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
       {actions.map(action => (
         <button
           key={action.status}
           onClick={() => run(action)}
           disabled={pending}
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition disabled:opacity-40 ${action.className}`}
+          className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition disabled:opacity-40 ${action.className}`}
         >
           {action.label}
         </button>

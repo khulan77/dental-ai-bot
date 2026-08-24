@@ -25,33 +25,38 @@ export default function ClinicLanding({
 }) {
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState<string | undefined>();
-  const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
-  const [bookingBranchId, setBookingBranchId] = useState<string | null>(null);
   const [pickerService, setPickerService] = useState<Service | null>(null);
-  const [bookingService, setBookingService] = useState<Service | null>(null);
+
+  // Захиалгын modal. null бол хаалттай. Талбарууд нь урьдчилсан сонголт —
+  // хоосон бол хэрэглэгч 1-р алхмаас (салбар) эхэлнэ.
+  const [booking, setBooking] = useState<{
+    doctor?: Doctor | null;
+    branchId?: string | null;
+    service?: Service | null;
+  } | null>(null);
+
   const services = (clinic.services ?? []) as Service[];
   const openChat = () => { setChatMessage(undefined); setShowChat(true); };
   const openChatWithMessage = (msg: string) => { setChatMessage(msg); setShowChat(true); };
-  const scrollToDoctors = () => {
-    document.getElementById('doctors')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const openBooking = (preset: {
+    doctor?: Doctor | null;
+    branchId?: string | null;
+    service?: Service | null;
+  } = {}) => setBooking(preset);
 
   return (
     <div className="min-h-screen bg-white">
-      <Nav clinic={clinic} onBookClick={scrollToDoctors} />
-      <Hero clinic={clinic} doctors={doctors} services={services} onBookClick={scrollToDoctors} />
+      <Nav clinic={clinic} onBookClick={() => openBooking()} />
+      <Hero clinic={clinic} doctors={doctors} services={services} onBookClick={() => openBooking()} />
       <Services services={services} onServiceClick={setPickerService} />
       <DentalTips onAskQuestion={openChatWithMessage} />
       <Doctors
         doctors={doctors}
         branches={branches}
         onChatClick={openChat}
-        onBookClick={(doctor, branchId) => {
-          setBookingDoctor(doctor);
-          setBookingBranchId(branchId ?? null);
-        }}
+        onBookClick={(doctor, branchId) => openBooking({ doctor, branchId: branchId ?? null })}
       />
-      <Contact clinic={clinic} branches={branches} onBookClick={scrollToDoctors} onAskQuestion={openChatWithMessage} />
+      <Contact clinic={clinic} branches={branches} onBookClick={() => openBooking()} onAskQuestion={openChatWithMessage} />
      
 
       {/* Floating Chat Button */}
@@ -71,8 +76,7 @@ export default function ClinicLanding({
           service={pickerService}
           doctors={doctors}
           onSelectDoctor={(doctor) => {
-            setBookingService(pickerService);
-            setBookingDoctor(doctor);
+            openBooking({ doctor, service: pickerService });
             setPickerService(null);
           }}
           onClose={() => setPickerService(null)}
@@ -80,16 +84,18 @@ export default function ClinicLanding({
       )}
 
       {/* Booking Modal */}
-      {bookingDoctor && (
+      {booking && (
         <BookingModal
-          doctor={bookingDoctor}
           clinicId={clinic.id}
           clinicSlug={clinic.slug}
+          doctors={doctors}
           services={services}
           branches={branches}
-          preselectedBranchId={bookingBranchId}
-          initialService={bookingService}
-          onClose={() => { setBookingDoctor(null); setBookingService(null); setBookingBranchId(null); }}
+          businessHours={clinic.business_hours}
+          initialDoctor={booking.doctor ?? null}
+          initialBranchId={booking.branchId ?? null}
+          initialService={booking.service ?? null}
+          onClose={() => setBooking(null)}
         />
       )}
 

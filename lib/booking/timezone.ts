@@ -163,3 +163,14 @@ const isoLabelFormatter = new Intl.DateTimeFormat('mn-MN', {
 export function clinicDateISOLabel(dateISO: string): string {
   return isoLabelFormatter.format(new Date(`${dateISO}T00:00:00Z`));
 }
+
+const CARD_WEEKDAYS = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
+
+/**
+ * Захиалгын карт дээрх огноо: "8-р сар 17, Даваа".
+ * Intl-ийн mn-MN богино формат нь "2026.08.17" гэж гаргадаг тул гараар угсарна.
+ */
+export function clinicCardDate(instant: Date): string {
+  const { month, day } = zonedParts(instant);
+  return `${month}-р сар ${day}, ${CARD_WEEKDAYS[clinicDayIndex(instant)]}`;
+}

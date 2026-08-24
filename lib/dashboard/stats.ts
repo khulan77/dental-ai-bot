@@ -407,3 +407,17 @@ export async function getDoctorStats(clinicId: string): Promise<DoctorStat[]> {
   // Хамгийн их орлоготой эмчийг эхэнд
   return stats.sort((a, b) => b.totalRevenue - a.totalRevenue);
 }
+/**
+ * Баталгаажуулахыг хүлээж буй захиалгын тоо.
+ * Хажуугийн цэсний тэмдэглэгээнд ашиглана.
+ */
+export async function getPendingCount(clinicId: string): Promise<number> {
+  const supabase = createAdminClient();
+  const { count } = await supabase
+    .from('appointments')
+    .select('id', { count: 'exact', head: true })
+    .eq('clinic_id', clinicId)
+    .eq('status', 'pending');
+
+  return count ?? 0;
+}

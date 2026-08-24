@@ -37,9 +37,9 @@ export default function Hero({
           <span className="site-eyebrow">{clinic.name}</span>
 
           <h1 className="site-h1 mb-5">
-            Шүдний эрүүл мэнд,
+            Эрүүл шүд,
             <br />
-            таны инээмсэглэл
+            итгэлтэй инээмсэглэл
           </h1>
 
           <p className="site-lead max-w-lg mb-8">

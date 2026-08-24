@@ -67,6 +67,8 @@ export type ServiceData = {
   price_mnt: number;
   duration_minutes: number;
   description?: string;
+  /** Supabase Storage дахь зургийн нээлттэй URL. Хоосон бол дүрс харагдана. */
+  image_url?: string | null;
   /** Хямдралын хувь (1-99). 0/null бол хямдралгүй. */
   discount_percent?: number | null;
   /** "YYYY-MM-DD" — энэ өдрийг оруулаад дуустал. null бол хугацаагүй. */

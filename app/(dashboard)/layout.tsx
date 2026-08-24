@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Sidebar from "./dashboard/sidebar";
 import Link from "next/link";
 import { isDemoClinic, DEMO_SLUG } from "@/lib/demo";
+import { getPendingCount } from "@/lib/dashboard/stats";
 
 export const revalidate = 0;
 
@@ -16,6 +17,8 @@ export default async function DashboardLayout({
 
   const clinic = await getCurrentClinic();
   const isDemo = isDemoClinic(clinic?.id);
+  // Баталгаажуулахыг хүлээж буй захиалга — цэсэн дээр тоо болж харагдана
+  const pendingCount = clinic ? await getPendingCount(clinic.id) : 0;
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -23,6 +26,7 @@ export default async function DashboardLayout({
         userEmail={user.email ?? ""}
         clinicName={clinic?.name ?? "Клиник тохируулна уу"}
         clinicSlug={clinic?.slug ?? null}
+        pendingCount={pendingCount}
       />
 
       {/* Mobile top bar-ийн өндрөөс доош main эхлэнэ */}

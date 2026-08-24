@@ -9,11 +9,14 @@ function NavLink({
   href,
   icon,
   label,
+  badge,
   onClose,
 }: {
   href: string;
   icon: string;
   label: string;
+  /** 0 эсвэл undefined бол харагдахгүй */
+  badge?: number;
   onClose?: () => void;
 }) {
   return (
@@ -25,7 +28,12 @@ function NavLink({
       <span className="text-base group-hover:scale-110 transition-transform">
         {icon}
       </span>
-      <span>{label}</span>
+      <span className="flex-1">{label}</span>
+      {!!badge && badge > 0 && (
+        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[11px] font-semibold flex items-center justify-center tabular-nums">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -34,11 +42,14 @@ export default function Sidebar({
   userEmail,
   clinicName,
   clinicSlug,
+  pendingCount = 0,
 }: {
   userEmail: string;
   clinicName: string;
   /** Эмнэлэг бүртгэгдээгүй бол хоосон — тэр үед олон нийтийн линк байхгүй */
   clinicSlug?: string | null;
+  /** Баталгаажуулахыг хүлээж буй захиалгын тоо */
+  pendingCount?: number;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -60,6 +71,7 @@ export default function Sidebar({
         href="/dashboard/appointments"
         icon="📅"
         label="Цаг захиалга"
+        badge={pendingCount}
         onClose={() => setOpen(false)}
       />
       <NavLink
@@ -132,9 +144,13 @@ export default function Sidebar({
         </Link>
         <button
           onClick={() => setOpen(true)}
-          className="p-2 rounded-lg hover:bg-slate-100 transition"
+          className="relative p-2 rounded-lg hover:bg-slate-100 transition"
+          aria-label={pendingCount > 0 ? `Цэс — ${pendingCount} шинэ захиалга` : 'Цэс'}
         >
           <Menu size={20} className="text-slate-700" />
+          {pendingCount > 0 && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
+          )}
         </button>
       </div>
 
@@ -162,7 +178,7 @@ export default function Sidebar({
             <div>
               <p className="text-sm font-bold text-slate-900">{clinicName}</p>
               <p className="text-[10px] text-slate-500 truncate max-w-[140px]">
-             Dental AI
+             Dental clinic
               </p>
             </div>
           </Link>
@@ -189,7 +205,7 @@ export default function Sidebar({
                {clinicName}
               </h1>
               <p className="text-[11px] text-slate-500 leading-tight truncate">
-               Dental AI
+               Dental clinic
               </p>
             </div>
           </Link>

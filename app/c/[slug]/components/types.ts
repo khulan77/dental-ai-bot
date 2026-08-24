@@ -3,6 +3,8 @@ export type Service = {
   name: string;
   price_mnt: number;
   duration_minutes: number;
+  /** Үйлчилгээний зураг (Supabase Storage). Хоосон бол дүрс харагдана. */
+  image_url?: string | null;
   /** Хямдралын хувь (1-99). 0 эсвэл хоосон бол хямдралгүй. */
   discount_percent?: number | null;
   /** "YYYY-MM-DD" — энэ өдрийг оруулаад дуустал. Хоосон бол хугацаагүй. */
