@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/db/supabase';
+import { rateLimiterHealth } from '@/lib/rate-limit';
 
 export async function GET() {
   try {
@@ -11,11 +12,24 @@ export async function GET() {
 
     if (error) throw error;
 
+    // Хамгаалалтын давхарга бүрэн эсэх — rate limiter унтарсныг чимээгүй
+    // өнгөрөөвөл нэвтрэлт хамгаалалтгүй үлдэнэ
+    const rateLimiter = await rateLimiterHealth();
+
+    // Дэлгэрэнгүйг зөвхөн серверийн log-д — энэ эндпойнт нээлттэй тул
+    // дотоод бүтцийн мэдээллийг гадагш гаргахгүй
+    if (rateLimiter.backend !== 'database') {
+      console.error(
+        `Rate limiter degraded: ${rateLimiter.error} — ${rateLimiter.hint}`
+      );
+    }
+
     return NextResponse.json({
-      status: 'ok',
+      status: rateLimiter.backend === 'database' ? 'ok' : 'degraded',
       timestamp: new Date().toISOString(),
       database: 'connected',
       clinics_count: count ?? 0,
+      rate_limiter: rateLimiter.backend,
     });
   } catch (error) {
     console.error('Health check failed:', error);

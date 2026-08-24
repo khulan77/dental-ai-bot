@@ -36,7 +36,9 @@ export async function updateAppointmentStatus(
       return { success: false, error: 'Төлөв буруу байна' };
     }
 
-    const clinicId = await requireOwnedClinicId();
+    // Демо дээр ч ажиллана — захиалга баталгаажуулах нь эмнэлгийн өдөр
+    // тутмын гол үйлдэл, зочин үүнийг туршиж үзэх ёстой.
+    const clinicId = await requireOwnedClinicId({ allowDemo: true });
     const supabase = createAdminClient();
 
     const { data, error } = await supabase

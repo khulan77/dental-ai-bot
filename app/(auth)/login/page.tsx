@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createBrowserSupabase } from '@/lib/db/supabase-browser';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,17 +15,28 @@ export default function LoginPage() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
 
-    const supabase = createBrowserSupabase();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Нэвтрэлтийг сервер талаар — тэнд IP/бүртгэл тус бүрийн хаалт тавьдаг.
+    // Браузераас шууд Supabase рүү дуудвал ямар ч хязгаарлалт үйлчлэхгүй.
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.get('email'),
+          password: formData.get('password'),
+        }),
+      });
 
-    if (signInError) {
-      setError(signInError.message);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? 'Нэвтэрч чадсангүй');
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setError('Сүлжээний алдаа. Дахин оролдоно уу.');
       setLoading(false);
       return;
     }

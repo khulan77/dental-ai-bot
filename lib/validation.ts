@@ -50,6 +50,31 @@ export const lookupBookingSchema = z.object({
   query: z.string().trim().min(4, 'Утас эсвэл кодоо оруулна уу').max(20),
 });
 
+/**
+ * Нууц үгийн доод шаардлага — БҮРТГҮҮЛЭХ үед л шалгана.
+ * (Нэвтрэхэд шалгахгүй: хуучин, сул нууц үгтэй эзэн нэвтэрч чадах ёстой.)
+ *
+ * АНХААР: энэ бол UX-ийн шалгуур. Жинхэнэ албадлагыг Supabase-ийн
+ * Authentication → Policies хэсэгт (minimum length, required characters)
+ * бас тохируулж өгөх хэрэгтэй — тэнд л сервер талд мөрдөгдөнө.
+ */
+export const passwordSchema = z
+  .string()
+  .min(8, 'Нууц үг хамгийн багадаа 8 тэмдэгт байна')
+  .max(72, 'Нууц үг хэт урт байна')
+  .regex(/[a-zA-Z]/, 'Нууц үгэнд үсэг байх ёстой')
+  .regex(/[0-9]/, 'Нууц үгэнд тоо байх ёстой');
+
+// POST /api/login
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Имэйл буруу байна').max(255),
+  // Нэвтрэхэд хүчийг нь шалгахгүй — зөвхөн хэмжээг хязгаарлана
+  password: z.string().min(1, 'Нууц үг оруулна уу').max(72),
+});
+
+// Бүртгүүлэх формын нууц үг
+export const signupPasswordSchema = passwordSchema;
+
 // POST /api/setup-clinic
 // userId-г ЗӨВХӨН сесс-ээс авна — оролтод байлгахгүй (өөр хүний нэрээр
 // клиник үүсгэхээс сэргийлнэ).
@@ -64,6 +89,8 @@ export const setupClinicSchema = z.object({
  */
 const RESERVED_SLUGS = [
   'admin', 'api', 'dashboard', 'login', 'signup', 'test', 'c', 'auth', 'settings',
+  // /c/demo — нүүр хуудасны демо эмнэлэг, хэрэглэгч эзэмшихээс хамгаална
+  'demo',
 ];
 
 export type SlugResult =

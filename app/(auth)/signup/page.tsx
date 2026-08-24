@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserSupabase } from '@/lib/db/supabase-browser';
+import { signupPasswordSchema } from '@/lib/validation';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -79,6 +80,15 @@ export default function SignupPage() {
 
     if (!slugStatus.available) {
       setError('URL шалгагдаагүй эсвэл боломжгүй байна');
+      setLoading(false);
+      return;
+    }
+
+    // Сул нууц үгийг эндээс зогсооно. Сервер талын албадлагыг Supabase-ийн
+    // Authentication → Policies хэсэгт мөн тохируулах ёстой.
+    const passwordCheck = signupPasswordSchema.safeParse(password);
+    if (!passwordCheck.success) {
+      setError(passwordCheck.error.issues[0].message);
       setLoading(false);
       return;
     }
@@ -251,8 +261,8 @@ export default function SignupPage() {
             type="password"
             name="password"
             required
-            minLength={6}
-            placeholder="Хамгийн багадаа 6 тэмдэгт"
+            minLength={8}
+            placeholder="8+ тэмдэгт, үсэг ба тоо агуулсан"
             className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>

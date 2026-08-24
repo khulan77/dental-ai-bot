@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ExternalLink } from "lucide-react";
 import LogoutButton from "../logout-button";
 
 function NavLink({
@@ -33,9 +33,12 @@ function NavLink({
 export default function Sidebar({
   userEmail,
   clinicName,
+  clinicSlug,
 }: {
   userEmail: string;
   clinicName: string;
+  /** Эмнэлэг бүртгэгдээгүй бол хоосон — тэр үед олон нийтийн линк байхгүй */
+  clinicSlug?: string | null;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -65,6 +68,27 @@ export default function Sidebar({
         label="Тохиргоо"
         onClose={() => setOpen(false)}
       />
+
+      {/* Эзэн өөрийн хуудсыг үйлчлүүлэгчийн нүдээр хармаар байдаг —
+          шинэ табд нээнэ, самбараас гарахгүй. */}
+      {clinicSlug && (
+        <>
+          <div className="h-px bg-slate-200 my-2" />
+          <a
+            href={`/c/${clinicSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition group"
+          >
+            <span className="text-base group-hover:scale-110 transition-transform">
+              🌐
+            </span>
+            <span className="flex-1">Үйлчлүүлэгчийн хуудас</span>
+            <ExternalLink size={13} className="text-slate-400" />
+          </a>
+        </>
+      )}
     </>
   );
 

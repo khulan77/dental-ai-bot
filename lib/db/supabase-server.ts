@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { isDemoClinic } from '@/lib/demo';
 
 /**
  * Server-side Supabase client (cookie-аас user session уншина).
@@ -63,8 +64,15 @@ export async function getCurrentClinic() {
  * клиентээс авалгүй сесс-ээс тодорхойлдог тул өөр клиникийн id дамжуулж
  * хуурах боломжгүй. Эрхгүй бол алдаа шиднэ — дуудагч талын try/catch
  * үүнийг { success: false, error } болгож хөрвүүлнэ.
+ *
+ * ДЕМО: нүүр хуудасны демо эмнэлгийг зочин бүр нэг л дансаар үздэг тул
+ * тохиргоог нь хамгаална — үгүй бол хэн нэгэн эмч устгах, slug солиход
+ * олон нийтэд харагддаг /c/demo хуудас эвдэрнэ. Өдөр тутам хийгддэг
+ * үйлдэл (захиалга баталгаажуулах) л { allowDemo: true }-ээр зөвшөөрөгдөнө.
  */
-export async function requireOwnedClinicId(): Promise<string> {
+export async function requireOwnedClinicId(
+  options: { allowDemo?: boolean } = {}
+): Promise<string> {
   const user = await getCurrentUser();
   if (!user) throw new Error('Нэвтрээгүй байна');
 
@@ -76,5 +84,12 @@ export async function requireOwnedClinicId(): Promise<string> {
     .single();
 
   if (!data) throw new Error('Танд эмнэлэг бүртгэлгүй байна');
+
+  if (!options.allowDemo && isDemoClinic(data.id as string)) {
+    throw new Error(
+      'Демо горимд тохиргоо өөрчлөгдөхгүй. Өөрийн эмнэлгээ бүртгүүлбэл бүрэн эрхтэй ажиллана.'
+    );
+  }
+
   return data.id as string;
 }
