@@ -64,8 +64,8 @@ export default function ServicesManager({
     const result = await addService(payload);
 
     if (result.success) {
-      // Шинэ үйлчилгээг local state-д нэмэх (UI шууд шинэчлэхэд)
-      const newService: Service = { id: crypto.randomUUID(), ...payload };
+      // Серверийн өгсөн id — өөр id хэрэглэвэл дараагийн засвар хадгалагдахгүй
+      const newService: Service = { id: result.id ?? crypto.randomUUID(), ...payload };
       setServices([...services, newService]);
       setShowAddForm(false);
       showMessage('success', 'Үйлчилгээ амжилттай нэмэгдлээ!');
@@ -273,14 +273,18 @@ function ServiceForm({
   loading: boolean;
   submitLabel: string;
 }) {
+  // Зураг байршиж дуусаагүй байхад хадгалбал URL хоосон явж зураг алга болно
+  const [uploading, setUploading] = useState(false);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (uploading) return;
     onSubmit(new FormData(e.currentTarget));
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <ImagePicker initialUrl={initialData?.image_url ?? null} />
+      <ImagePicker initialUrl={initialData?.image_url ?? null} onUploadingChange={setUploading} />
 
       <div>
         <label className="block text-xs font-medium text-slate-700 mb-1">
@@ -381,10 +385,10 @@ function ServiceForm({
       <div className="flex gap-2 pt-2">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || uploading}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
         >
-          {loading ? 'Хадгалж байна...' : submitLabel}
+          {loading ? 'Хадгалж байна...' : uploading ? 'Зураг байршиж байна...' : submitLabel}
         </button>
         <button
           type="button"
@@ -398,25 +402,85 @@ function ServiceForm({
   );
 }
 
+// ── Зургийг байршуулахаас өмнө бэлдэх ──────────────────────────────────
+// Утасны зураг ихэвчлэн 3-8MB, 4000px байдаг — сервер 3MB-аас томыг хүлээж
+// авахгүй. Тиймээс хөтөч дээрээ жижигрүүлээд WebP болгож илгээнэ.
+// Сайт дээр карт хамгийн ихдээ ~720px (retina) тул 1600px бол хангалттай.
+
+const MAX_SIDE = 1600;
+const SERVER_LIMIT = 3 * 1024 * 1024;
+/** Үүнээс бага, зөв төрөлтэй файлыг хөндөхгүй */
+const KEEP_AS_IS_BYTES = 800 * 1024;
+const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp'];
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+  return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, type, quality));
+}
+
+async function prepareImage(file: File): Promise<File> {
+  if (ACCEPTED.includes(file.type) && file.size <= KEEP_AS_IS_BYTES) return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    // EXIF эргэлтийг (утсаар хэвтээ/босоо авсан) хөтөч өөрөө засна
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error('Энэ зургийг уншиж чадсангүй. JPG, PNG эсвэл WEBP зураг сонгоно уу.');
+  }
+
+  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d')!;
+  // Тунгалаг PNG-г JPEG болгоход ар нь хар болохоос сэргийлнэ
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  // WebP дэмждэггүй хөтөч PNG буцаадаг — тэр үед JPEG руу шилжинэ
+  let blob = await canvasToBlob(canvas, 'image/webp', 0.85);
+  if (!blob || blob.type !== 'image/webp') blob = await canvasToBlob(canvas, 'image/jpeg', 0.85);
+  if (!blob) throw new Error('Зургийг боловсруулж чадсангүй');
+  if (blob.size > SERVER_LIMIT) throw new Error('Зураг хэт том байна. Өөр зураг сонгоно уу.');
+
+  const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+  return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, { type: blob.type });
+}
+
 /**
  * Үйлчилгээний зураг сонгох. Файлыг шууд /api/upload руу илгээгээд
  * буцаж ирсэн URL-ыг нуувч талбарт хийнэ — форм илгээхэд түүнийг л
  * хадгална (файл өөрөө server action-аар дамжихгүй).
  */
-function ImagePicker({ initialUrl }: { initialUrl: string | null }) {
+function ImagePicker({
+  initialUrl,
+  onUploadingChange,
+}: {
+  initialUrl: string | null;
+  onUploadingChange: (uploading: boolean) => void;
+}) {
   const [url, setUrl] = useState<string | null>(initialUrl);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploadingState] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function setUploading(v: boolean) {
+    setUploadingState(v);
+    onUploadingChange(v);
+  }
 
+  async function upload(file: File) {
+    if (!file.type.startsWith('image/')) {
+      setError('Зөвхөн зураг оруулна уу');
+      return;
+    }
     setUploading(true);
     setError(null);
     try {
       const body = new FormData();
-      body.append('file', file);
+      body.append('file', await prepareImage(file));
       const res = await fetch('/api/upload', { method: 'POST', body });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Байршуулж чадсангүй');
@@ -425,8 +489,20 @@ function ImagePicker({ initialUrl }: { initialUrl: string | null }) {
       setError(err instanceof Error ? err.message : 'Байршуулж чадсангүй');
     } finally {
       setUploading(false);
-      e.target.value = '';   // ижил файлыг дахин сонгож болохын тулд
     }
+  }
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';   // ижил файлыг дахин сонгож болохын тулд
+    if (file) upload(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && !uploading) upload(file);
   }
 
   return (
@@ -437,41 +513,64 @@ function ImagePicker({ initialUrl }: { initialUrl: string | null }) {
 
       <input type="hidden" name="image_url" value={url ?? ''} />
 
-      <div className="flex items-center gap-3">
-        {url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={url}
-            alt=""
-            className="w-20 h-20 rounded-lg object-cover border border-slate-200 shrink-0"
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+        {/* Сайт дээрх карттай ижил 16:10 харьцаа — яг ингэж харагдана */}
+        <label
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          className={`relative block w-full sm:w-64 aspect-[16/10] rounded-lg overflow-hidden cursor-pointer transition ${
+            url
+              ? 'border border-slate-200'
+              : `border-2 border-dashed ${dragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/50'}`
+          } ${uploading ? 'pointer-events-none' : ''}`}
+        >
+          {url ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="" className="w-full h-full object-cover" />
+              <span className="absolute inset-0 bg-slate-900/0 hover:bg-slate-900/40 text-white text-xs font-medium flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                Зураг солих
+              </span>
+            </>
+          ) : !uploading && (
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center px-4">
+              <span className="text-2xl">🖼️</span>
+              <span className="text-xs font-medium text-slate-700">
+                {dragging ? 'Энд тавина уу' : 'Зураг сонгох эсвэл чирж оруулах'}
+              </span>
+            </span>
+          )}
+
+          {uploading && (
+            <span className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-2 text-xs font-medium text-slate-600">
+              <span className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              Байршуулж байна...
+            </span>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFile}
+            disabled={uploading}
+            className="hidden"
           />
-        ) : (
-          <div className="w-20 h-20 rounded-lg bg-white border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-300 text-2xl shrink-0">
-            🦷
-          </div>
-        )}
+        </label>
 
         <div className="space-y-1.5">
-          <label className="inline-block px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition">
-            {uploading ? 'Байршуулж байна...' : url ? 'Зураг солих' : 'Зураг сонгох'}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFile}
-              disabled={uploading}
-              className="hidden"
-            />
-          </label>
-          {url && (
+          {url && !uploading && (
             <button
               type="button"
               onClick={() => setUrl(null)}
-              className="block text-xs text-slate-400 hover:text-red-600 transition"
+              className="block text-xs font-medium text-slate-500 hover:text-red-600 transition"
             >
-              Устгах
+              Зургийг хасах
             </button>
           )}
-          <p className="text-[11px] text-slate-400">JPG, PNG, WEBP · 3MB хүртэл</p>
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            Утасны зураг ч болно — том зургийг<br className="hidden sm:block" /> автоматаар жижигрүүлнэ.
+          </p>
         </div>
       </div>
 

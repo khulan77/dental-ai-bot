@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/db/supabase";
 import { getCurrentClinic } from "@/lib/db/supabase-server";
 import { clinicCardDate, clinicShortDate, clinicTimeLabel } from "@/lib/booking/timezone";
 import { effectivePrice } from "@/lib/booking/pricing";
 import AppointmentActions from "./appointment-actions";
+import CompleteToggle from "./complete-toggle";
+import { isCheckable } from "./checkable";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +112,7 @@ export default async function AppointmentsPage() {
 
   return (
     <div className="max-w-5xl space-y-5">
+      <div className="flex items-start justify-between gap-3">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
           Цаг захиалга
@@ -122,6 +126,14 @@ export default async function AppointmentsPage() {
           )}
         </p>
       </div>
+        {/* Утсаар/биечлэн ирсэн үйлчлүүлэгчийг хуанли дээрээс бүртгэнэ */}
+        <Link
+          href="/dashboard/calendar?new=1"
+          className="shrink-0 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-semibold shadow-sm transition"
+        >
+          + Шинэ захиалга
+        </Link>
+      </div>
 
       {appointments.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 text-center py-16 text-slate-400">
@@ -130,7 +142,8 @@ export default async function AppointmentsPage() {
           <p className="text-sm mt-1">Шинэ цаг авмагц энд харагдана</p>
         </div>
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
+        // items-start — хумигдсан (дууссан) карт хажуугийнхаа өндрөөр сунахгүй
+        <div className="grid gap-3 lg:grid-cols-2 items-start">
           {appointments.map(apt => {
             const date = new Date(apt.scheduled_at);
             const status = statusLabels[apt.status] ?? statusLabels.confirmed;
@@ -146,6 +159,12 @@ export default async function AppointmentsPage() {
             const header = (
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
+                  {/* Баталгаажсан → нэг дарж "Дууссан". Дууссаныг дахин дарж буцаана. */}
+                  {isCheckable(apt.status) && (
+                    <span className="pt-2">
+                      <CompleteToggle appointmentId={apt.id} status={apt.status} />
+                    </span>
+                  )}
                   <span
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-semibold shrink-0 ${avatarColor(
                       apt.customer_name ?? "?"

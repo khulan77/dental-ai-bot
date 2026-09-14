@@ -43,6 +43,25 @@ export const bookSchema = z.object({
     }),
 });
 
+// createAppointment server action — эмнэлэг хяналтын самбараас шууд бүртгэнэ.
+// Утсаар залгасан эсвэл шууд ирсэн үйлчлүүлэгч тул утас заавал биш,
+// өнгөрсөн цагийг ч бүртгэж болно (жнь: дөнгөж үзүүлээд гарсан хүн).
+export const adminBookSchema = z.object({
+  doctorId: z.string().uuid('Эмчээ сонгоно уу'),
+  branchId: z.string().uuid().nullable(),
+  customerName: z.string().trim().min(1, 'Үйлчлүүлэгчийн нэрийг бичнэ үү').max(100),
+  customerPhone: z.preprocess(
+    v => (typeof v === 'string' ? v.replace(/[\s-]/g, '') : v),
+    z.union([z.literal(''), phoneSchema])
+  ),
+  service: z.string().trim().min(1, 'Үйлчилгээгээ сонгоно уу').max(100),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Огноо буруу байна'),
+  time: z.string().regex(/^\d{2}:\d{2}$/, 'Цаг буруу байна'),
+  durationMinutes: z.number().int().min(5, 'Хугацаа хэт богино').max(480, 'Хугацаа хэт урт'),
+  status: z.enum(['pending', 'confirmed']),
+  notes: z.string().trim().max(500, 'Тэмдэглэл хэт урт байна').default(''),
+});
+
 // POST /api/my-bookings — үйлчлүүлэгч захиалгаа шалгах
 // query нь утасны дугаар ЭСВЭЛ захиалгын код байна.
 export const lookupBookingSchema = z.object({

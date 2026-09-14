@@ -1,14 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Clinic } from './types';
+import type { Clinic, SectionLink } from './types';
 import { CalendarDays, Menu, Ticket, X } from 'lucide-react';
+import Logo from './logo';
+
+/** Хуудсан доторх хэсэг рүү зөөлөн гүйлгэнэ (толгойн өндрийг .site-section тооцно) */
+export function scrollToSection(e: React.MouseEvent, id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  e.preventDefault();
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 export default function Nav({
   clinic,
+  links,
   onBookClick,
 }: {
   clinic: Clinic;
+  links: SectionLink[];
   onBookClick: () => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
@@ -22,35 +33,36 @@ export default function Nav({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 bg-white transition-shadow duration-200 ${
-        scrolled ? 'border-b border-[var(--site-line)]' : 'border-b border-transparent'
+      className={`fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur transition-shadow duration-200 border-b ${
+        scrolled || menuOpen ? 'border-[var(--site-line)]' : 'border-transparent'
       }`}
     >
-      {/* Hero-гийн 1120px контейнераас 48px-ээр гадуур — лого, товч арай захдаа */}
-      <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+      <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-6">
+        <a
+          href="#top"
+          onClick={e => { scrollToSection(e, 'top'); setMenuOpen(false); }}
+          className="min-w-0"
+          aria-label={`${clinic.name} — нүүр`}
+        >
+          <Logo name={clinic.name} />
+        </a>
 
-        {/* Лого */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[var(--site-r-btn)] bg-[var(--site-accent)] flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C9.2 2 7 4.2 7 7c0 1.8.8 3.4 2 4.5l1 7.5c.1.6.6 1 1.2 1 .5 0 1-.4 1.1-1L13 13v6c.1.6.6 1 1.1 1 .6 0 1.1-.4 1.2-1l1-7.5C17.2 10.4 18 8.8 18 7c0-2.8-2.2-5-5-5z" fill="white"/>
-            </svg>
-          </div>
-          <span className="text-[15px] font-semibold tracking-tight text-[var(--site-ink)]">
-            {clinic.name}
-          </span>
-        </div>
+        {/* Хэсгүүд — өргөн дэлгэцэнд */}
+        <nav className="hidden lg:flex items-center gap-7" aria-label="Хэсгүүд">
+          {links.map(l => (
+            <a key={l.id} href={`#${l.id}`} onClick={e => scrollToSection(e, l.id)} className="site-link">
+              {l.label}
+            </a>
+          ))}
+        </nav>
 
         {/* Desktop CTA */}
-        <div className="hidden sm:flex items-center gap-3">
-          <a
-            href={`/c/${clinic.slug}/booking`}
-            className="inline-flex items-center gap-1.5 rounded-[var(--site-r-btn)] border border-[var(--site-line)] px-3.5 py-2 text-[13px] font-semibold text-[var(--site-ink-soft)] hover:border-[var(--site-accent)] hover:text-[var(--site-accent)] transition-colors"
-          >
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
+          <a href={`/c/${clinic.slug}/booking`} className="site-btn-outline py-2 px-3.5 text-[13px]">
             <Ticket className="w-3.5 h-3.5" />
             Захиалга шалгах
           </a>
-          <button onClick={onBookClick} className="site-btn">
+          <button onClick={onBookClick} className="site-btn py-2">
             <CalendarDays className="w-4 h-4" />
             Цаг авах
           </button>
@@ -58,8 +70,10 @@ export default function Nav({
 
         {/* Mobile menu button */}
         <button
-          className="sm:hidden w-9 h-9 flex items-center justify-center rounded-[var(--site-r-btn)] hover:bg-[var(--site-bg-soft)] transition"
+          className="sm:hidden w-10 h-10 -mr-2 flex items-center justify-center rounded-[var(--site-r-btn)] hover:bg-[var(--site-bg-soft)] transition shrink-0"
           onClick={() => setMenuOpen(v => !v)}
+          aria-label={menuOpen ? 'Цэс хаах' : 'Цэс нээх'}
+          aria-expanded={menuOpen}
         >
           {menuOpen
             ? <X className="w-5 h-5 text-[var(--site-ink-soft)]" />
@@ -69,21 +83,29 @@ export default function Nav({
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="sm:hidden bg-white border-t border-[var(--site-line)] w-full max-w-[1280px] mx-auto px-5 sm:px-8 py-4 space-y-2">
-          <button
-            onClick={() => { onBookClick(); setMenuOpen(false); }}
-            className="site-btn w-full"
-          >
-            <CalendarDays className="w-4 h-4" />
-            Цаг авах
-          </button>
-          <a
-            href={`/c/${clinic.slug}/booking`}
-            className="site-btn-outline w-full"
-          >
-            <Ticket className="w-4 h-4" />
-            Захиалга шалгах
-          </a>
+        <div className="sm:hidden bg-white px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-150">
+          <nav className="flex flex-col py-2" aria-label="Хэсгүүд">
+            {links.map(l => (
+              <a
+                key={l.id}
+                href={`#${l.id}`}
+                onClick={e => { scrollToSection(e, l.id); setMenuOpen(false); }}
+                className="py-3 text-[15px] font-medium text-[var(--site-ink-soft)] border-b border-[var(--site-line)] last:border-b-0"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <a href={`/c/${clinic.slug}/booking`} className="site-btn-outline">
+              <Ticket className="w-4 h-4" />
+              Шалгах
+            </a>
+            <button onClick={() => { onBookClick(); setMenuOpen(false); }} className="site-btn">
+              <CalendarDays className="w-4 h-4" />
+              Цаг авах
+            </button>
+          </div>
         </div>
       )}
     </header>

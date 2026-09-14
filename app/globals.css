@@ -287,6 +287,8 @@ body {
   .site-section {
     padding: 80px 20px;
     background: var(--site-bg);
+    /* Nav-аас хэсэг рүү үсрэхэд тогтмол толгойн (64px) доор нуугдахгүй */
+    scroll-margin-top: 64px;
   }
   @media (min-width: 640px) {
     .site-section { padding: 104px 32px; }
@@ -383,6 +385,31 @@ body {
   }
   .site-btn-outline:hover { border-color: #CBD5E1; background: var(--site-bg-soft); }
 
+  .site-btn:disabled,
+  .site-btn-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Гараар (Tab) явахад аль товч дээр байгаа нь харагдана */
+  .site-btn:focus-visible,
+  .site-btn-outline:focus-visible,
+  .site-option:focus-visible,
+  .site-link:focus-visible {
+    outline: 2px solid var(--site-accent);
+    outline-offset: 2px;
+  }
+
+  /* Бичвэр маягийн холбоос (nav, footer) */
+  .site-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--site-muted);
+    border-radius: 6px;
+    transition: color 0.2s ease;
+  }
+  .site-link:hover { color: var(--site-accent); }
+
   /* ── Дүрсний хайрцаг ── */
   .site-icon-tile {
     display: flex;
@@ -401,8 +428,10 @@ body {
     background: var(--site-bg);
     display: flex;
     flex-direction: column;
-    max-height: 92vh;
+    max-height: 92dvh;
     box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+    /* Утсан дээр доороос гарч ирэх "sheet" — дээд буланг л бөөрөнхийлнө */
+    border-radius: var(--site-r-card) var(--site-r-card) 0 0;
   }
   @media (min-width: 640px) {
     .site-modal {
@@ -439,10 +468,14 @@ body {
     padding: 11px 14px;
     border-radius: var(--site-r-btn);
     border: 1px solid var(--site-line);
-    font-size: 14px;
+    /* 16px-ээс бага бол iPhone талбар дээр дарахад хуудсыг томруулчихдаг */
+    font-size: 16px;
     color: var(--site-ink);
     background: var(--site-bg);
     transition: border-color 0.2s ease;
+  }
+  @media (min-width: 640px) {
+    .site-input { font-size: 14px; }
   }
   .site-input::placeholder { color: #94A3B8; }
   .site-input:focus {
@@ -566,6 +599,30 @@ body {
     transition: background 0.2s ease, transform 0.2s ease;
   }
   .site-btn-invert:hover { background: var(--site-accent-soft); }
+
+  /* Гүн зурвас дээрх хоёрдогч товч */
+  .site-btn-ghost-invert {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--site-r-btn);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .site-btn-ghost-invert:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  .site-btn-invert:focus-visible,
+  .site-btn-ghost-invert:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
 
   /* Зурвасан дээр хөвж буй карт */
   .site-card-float {

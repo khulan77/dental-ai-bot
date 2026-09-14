@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Check } from 'lucide-react';
+import { ModalClose } from './components/modal';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -25,9 +26,11 @@ const QUICK_ACTIONS = [
 export default function ClinicChat({
   clinic,
   initialMessage,
+  onClose,
 }: {
   clinic: Clinic;
   initialMessage?: string;
+  onClose?: () => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -50,8 +53,10 @@ export default function ClinicChat({
 
   useEffect(() => {
     if (!initialMessage || autoSentRef.current) return;
-    autoSentRef.current = true;
+    // Ref-ийг timer дотор тэмдэглэнэ — strict mode effect-ийг хоёр удаа ажиллуулж
+    // эхний timer-ийг цуцалдаг тул гадна нь тэмдэглэвэл асуулт огт илгээгдэхгүй.
     const timer = setTimeout(() => {
+      autoSentRef.current = true;
       const current = messagesRef.current;
       const userMsg: ChatMessage = { role: 'user', content: initialMessage, timestamp: new Date().toISOString() };
       const next = [...current, userMsg];
@@ -131,8 +136,9 @@ export default function ClinicChat({
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="site-h3 truncate">{clinic.name}</h2>
-            <p className="text-[13px] text-[var(--site-muted)] mt-0.5">AI ассистент</p>
+            <p className="text-[13px] text-[var(--site-muted)] mt-0.5">AI ассистент · 24 цаг хариулна</p>
           </div>
+          {onClose && <ModalClose onClose={onClose} />}
         </div>
       </div>
 
@@ -226,21 +232,23 @@ export default function ClinicChat({
       </div>
 
       {/* ── INPUT BAR ── */}
-      <div className="flex-shrink-0 bg-white border-t border-[var(--site-line)] px-4 py-3.5">
-        <div className="flex items-center gap-2.5 bg-white border border-[var(--site-line)] rounded-[var(--site-r-btn)] px-4 py-2.5 focus-within:border-[var(--site-accent)] transition-colors">
+      <div className="flex-shrink-0 bg-white border-t border-[var(--site-line)] px-4 pt-3.5 pb-[max(14px,env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-2.5 bg-white border border-[var(--site-line)] rounded-[var(--site-r-btn)] pl-4 pr-1.5 py-1.5 focus-within:border-[var(--site-accent)] transition-colors">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Асуулт бичих..."
+            placeholder="Асуултаа бичнэ үү..."
             disabled={loading}
-            className="flex-1 bg-transparent text-[14px] text-[var(--site-ink)] placeholder:text-slate-400 outline-none disabled:opacity-50"
+            enterKeyHint="send"
+            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] text-[var(--site-ink)] placeholder:text-slate-400 outline-none disabled:opacity-50"
           />
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim()}
+            aria-label="Илгээх"
             className="w-9 h-9 rounded-[var(--site-r-btn)] bg-[var(--site-accent)] hover:bg-[var(--site-accent-hover)] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors shrink-0"
           >
             <Send className="w-4 h-4 text-white" />

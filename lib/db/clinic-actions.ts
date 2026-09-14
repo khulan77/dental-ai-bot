@@ -80,7 +80,7 @@ export type ServiceData = {
  */
 export async function addService(
   service: Omit<ServiceData, 'id'>
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
     const clinicId = await requireOwnedClinicId();
     const supabase = createAdminClient();
@@ -115,7 +115,9 @@ export async function addService(
     revalidatePath('/dashboard/settings/services');
     revalidatePath('/dashboard');
 
-    return { success: true };
+    // Client жагсаалтдаа яг энэ id-г хэрэглэнэ — үгүй бол нэмсэн даруйдаа
+    // засах/устгахад буруу id явж, өөрчлөлт чимээгүй алга болно.
+    return { success: true, id: newService.id };
   } catch (error) {
     return {
       success: false,

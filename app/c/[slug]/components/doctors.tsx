@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import type { Doctor, Branch } from './types';
 import { CalendarDays, MapPin } from 'lucide-react';
+import DoctorAvatar from './doctor-avatar';
 
 export default function Doctors({
   doctors,
@@ -12,7 +12,6 @@ export default function Doctors({
 }: {
   doctors: Doctor[];
   branches?: Branch[];
-  onChatClick: () => void;
   // branchId — салбар сонгосон бол тухайн салбар (modal-д урьдчилан сонгоно)
   onBookClick: (doctor: Doctor, branchId?: string) => void;
 }) {
@@ -42,15 +41,15 @@ export default function Doctors({
           </p>
         </div>
 
-        {/* Салбарын шүүлт — олон салбартай эмнэлэгт л */}
+        {/* Салбарын шүүлт — олон салбартай эмнэлэгт л. Утсан дээр хажуу тийш гүйлгэнэ. */}
         {hasBranches && (
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
+          <div className="flex sm:flex-wrap sm:justify-center gap-2 mb-10 -mx-5 px-5 sm:mx-0 sm:px-0 overflow-x-auto [scrollbar-width:none]">
             {branches.map(b => (
               <button
                 key={b.id}
                 onClick={() => setActiveBranchId(b.id)}
                 aria-pressed={activeBranchId === b.id}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--site-r-pill)] text-[13px] font-medium border transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2 shrink-0 whitespace-nowrap rounded-[var(--site-r-pill)] text-[13px] font-medium border transition-colors ${
                   activeBranchId === b.id
                     ? 'bg-[var(--site-accent)] text-white border-[var(--site-accent)]'
                     : 'bg-[var(--site-bg)] text-[var(--site-ink-soft)] border-[var(--site-line)] hover:border-[#CBD5E1]'
@@ -73,19 +72,7 @@ export default function Doctors({
               <div key={doctor.id} className="site-card site-card-hover p-6 flex flex-col">
 
                 <div className="flex items-center gap-4 mb-5">
-                  {doctor.avatar_url ? (
-                    <Image
-                      src={doctor.avatar_url}
-                      alt={doctor.name}
-                      width={56}
-                      height={56}
-                      className="w-14 h-14 rounded-full object-cover shrink-0"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-full bg-[var(--site-accent-soft)] text-[var(--site-accent)] flex items-center justify-center text-[18px] font-semibold shrink-0">
-                      {doctor.name.charAt(0)}
-                    </div>
-                  )}
+                  <DoctorAvatar doctor={doctor} size={56} />
                   <div className="min-w-0">
                     <h3 className="site-h3 truncate">{doctor.name}</h3>
                     {doctor.specialty && (
@@ -102,7 +89,7 @@ export default function Doctors({
 
                 <button
                   onClick={() => onBookClick(doctor, hasBranches ? activeBranchId : undefined)}
-                  className="site-btn w-full mt-auto"
+                  className="site-btn-outline w-full mt-auto hover:border-[var(--site-accent)] hover:bg-[var(--site-accent)] hover:text-white"
                 >
                   <CalendarDays className="w-4 h-4" />
                   Цаг авах

@@ -18,14 +18,14 @@ export default function Services({
   if (services.length === 0) return null;
 
   return (
-    <section className="site-section site-section-soft">
+    <section id="services" className="site-section site-section-soft">
       <div className="site-container">
 
         <div className="text-center max-w-xl mx-auto mb-12">
           <span className="site-eyebrow">Үйлчилгээ</span>
           <h2 className="site-h2 mb-4">Манай үйлчилгээнүүд</h2>
           <p className="site-lead">
-            Орчин үеийн тоног төхөөрөмж, мэргэшсэн эмч нарын гараар хийгдэх бүх төрлийн эмчилгээ.
+            Үйлчилгээгээ сонгоод тухайн эмчилгээг хийдэг эмчээс шууд цаг аваарай.
           </p>
         </div>
 
@@ -37,14 +37,8 @@ export default function Services({
               <button
                 key={service.id}
                 onClick={() => onServiceClick(service)}
-                className="site-card site-card-hover text-left flex flex-col relative overflow-hidden"
+                className="site-card site-card-hover text-left flex flex-col overflow-hidden group"
               >
-                {onSale && (
-                  <span className="site-sale-badge absolute top-4 right-4 z-10">
-                    -{service.discount_percent}%
-                  </span>
-                )}
-
                 {/* Эмнэлэг зураг оруулсан бол түүнийг, үгүй бол дүрсийг */}
                 {service.image_url && (
                   <div className="relative aspect-[16/10] bg-[var(--site-bg-soft)]">
@@ -59,17 +53,18 @@ export default function Services({
                 )}
 
                 <div className="p-6 flex flex-col flex-1">
-                <div className="flex items-start justify-between mb-5">
+                <div className="flex items-center gap-2 mb-5">
                   {!service.image_url && (
-                    <div className="site-icon-tile">
+                    <div className="site-icon-tile mr-auto">
                       <Icon className="w-[18px] h-[18px]" />
                     </div>
                   )}
-                  {!onSale && (
-                    <span className="site-pill ml-auto">
-                      <Clock className="w-3 h-3" />
-                      {service.duration_minutes} мин
-                    </span>
+                  <span className={`site-pill ${service.image_url ? 'mr-auto' : ''}`}>
+                    <Clock className="w-3 h-3" />
+                    {service.duration_minutes} мин
+                  </span>
+                  {onSale && (
+                    <span className="site-sale-badge">-{service.discount_percent}%</span>
                   )}
                 </div>
 
@@ -102,7 +97,7 @@ export default function Services({
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--site-accent)]">
                     Цаг захиалах
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
                 </div>
                 </div>

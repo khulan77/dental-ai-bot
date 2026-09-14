@@ -28,6 +28,9 @@ export type Branch = {
   phone: string | null;
 };
 
+/** Nav, footer дахь хуудсан доторх холбоос — id нь section-ий id */
+export type SectionLink = { id: string; label: string };
+
 /** Тохиргоо → Ажлын цаг хэсгээс ирдэг өдрийн цаг */
 export type DayHours = { open: string; close: string } | null;
 
