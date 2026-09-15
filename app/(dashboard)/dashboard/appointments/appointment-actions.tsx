@@ -67,9 +67,12 @@ function actionsFor(status: string): Action[] {
 export default function AppointmentActions({
   appointmentId,
   status,
+  size = 'md',
 }: {
   appointmentId: string;
   status: string;
+  /** 'sm' — жагсаалтын мөрөн дотор багтаах жижиг товч */
+  size?: 'sm' | 'md';
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +80,10 @@ export default function AppointmentActions({
 
   if (actions.length === 0) return <span className="text-xs text-slate-400">—</span>;
 
-  function run(action: Action) {
+  function run(e: React.MouseEvent, action: Action) {
+    // <summary> дотор байхад мөрийг дэлгэж/хумихгүй
+    e.preventDefault();
+    e.stopPropagation();
     if (action.confirm && !confirm(action.confirm)) return;
     setError(null);
     startTransition(async () => {
@@ -91,9 +97,9 @@ export default function AppointmentActions({
       {actions.map(action => (
         <button
           key={action.status}
-          onClick={() => run(action)}
+          onClick={e => run(e, action)}
           disabled={pending}
-          className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition disabled:opacity-40 ${action.className}`}
+          className={`${size === 'sm' ? 'px-3 py-1 text-[12px]' : 'px-4 py-1.5 text-[13px]'} rounded-full font-medium transition disabled:opacity-40 ${action.className}`}
         >
           {action.label}
         </button>

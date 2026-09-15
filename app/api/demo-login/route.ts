@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/db/supabase-server';
+import { createAdminClient } from '@/lib/db/supabase';
 import { DEMO_EMAIL, DEMO_PASSWORD } from '@/lib/demo';
+import { ensureFreshDemoAppointments } from '@/lib/demo-data';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 /**
@@ -40,6 +42,14 @@ export async function POST(request: Request) {
   if (error) {
     console.error('Демо нэвтрэлт амжилтгүй:', error.message);
     return NextResponse.redirect(new URL('/login?demo=unavailable', request.url), 303);
+  }
+
+  // Захиалгууд өнөөдрөөс тоологддог — хуучирсан бол хуанли хоосон
+  // харагдахгүйн тулд шинэчилнэ. Амжилтгүй болсон ч нэвтрэлтийг саатуулахгүй.
+  try {
+    await ensureFreshDemoAppointments(createAdminClient());
+  } catch (err) {
+    console.error('Демо захиалга шинэчлэх амжилтгүй:', err instanceof Error ? err.message : err);
   }
 
   return NextResponse.redirect(new URL('/dashboard', request.url), 303);

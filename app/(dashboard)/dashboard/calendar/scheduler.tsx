@@ -207,8 +207,10 @@ export default function Scheduler({
 
   const selected = appointments.find(a => a.id === selectedId) ?? null;
   const branchName = branches.find(b => b.id === branchId)?.name ?? null;
-  const pendingCount = appointments.filter(a => a.status === 'pending').length;
-  const dayTotal = totalPrice(appointments);
+  // Дүн нь зөвхөн дэлгэцэнд харагдаж буй (сонгосон салбарын) захиалгаар
+  const visible = views.flatMap(v => v.items);
+  const pendingCount = visible.filter(a => a.status === 'pending').length;
+  const dayTotal = totalPrice(visible);
   const doctorName = (id: string | null) => columns.find(c => c.doctor.id === id)?.doctor.name ?? null;
 
   // Самбар нээлттэй үед том дэлгэцэнд хуанлийг зүүн тийш шахна — баганууд
@@ -219,7 +221,7 @@ export default function Scheduler({
     <div className={`space-y-4 transition-[margin] duration-200 ${panelOpen ? 'lg:mr-[372px]' : ''}`}>
       {/* ── Хэрэгслийн мөр ── */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-xl border border-slate-200 bg-white overflow-hidden">
             <button onClick={() => go(shiftISO(date, -1))} aria-label="Өмнөх өдөр" className="px-3 py-2 text-slate-600 hover:bg-slate-50 transition">‹</button>
             <button
@@ -234,9 +236,9 @@ export default function Scheduler({
 
           <button
             onClick={() => dateInputRef.current?.showPicker?.()}
-            className="relative inline-flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-[15px] font-semibold text-slate-900 whitespace-nowrap transition"
+            className="relative inline-flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl hover:bg-white text-[14px] sm:text-[15px] font-semibold text-slate-900 whitespace-nowrap transition"
           >
-            📅 {dateLabel(date)}
+            <span className="hidden sm:inline">📅</span> {dateLabel(date)}
             {isToday && <span className="hidden sm:inline text-[11px] font-semibold text-blue-600 bg-blue-50 rounded-full px-2 py-0.5">Өнөөдөр</span>}
             <input
               ref={dateInputRef}
@@ -267,25 +269,39 @@ export default function Scheduler({
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-3 whitespace-nowrap">
-          <span className="text-[13px] text-slate-500 hidden sm:inline">
-            {appointments.length} захиалга
-            {dayTotal > 0 && (
-              <span className="ml-2 font-semibold text-emerald-700">· {money(dayTotal)}</span>
-            )}
-            {pendingCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200 text-[11px] font-semibold">
-                {pendingCount} баталгаажуулах
-              </span>
-            )}
+        <button
+          onClick={() => { setSelectedId(null); setDraft(defaultDraft()); }}
+          disabled={columns.length === 0}
+          className="ml-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-semibold shadow-sm whitespace-nowrap disabled:opacity-40 transition"
+        >
+          + Шинэ захиалга
+        </button>
+      </div>
+
+      {/* ── Өдрийн дүн + өнгөний тайлбар ── */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[12px] text-slate-500">
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <span className="font-medium text-slate-700 tabular-nums">{visible.length} захиалга</span>
+          {dayTotal > 0 && (
+            <span className="font-semibold text-emerald-700 tabular-nums">· {money(dayTotal)}</span>
+          )}
+          {pendingCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200 text-[11px] font-semibold">
+              {pendingCount} баталгаажуулах
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {(['pending', 'confirmed', 'completed', 'no_show'] as const).map(s => (
+            <span key={s} className="inline-flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-sm ${STATUS_STYLE[s].dot}`} />
+              {STATUS_STYLE[s].label}
+            </span>
+          ))}
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[repeating-linear-gradient(135deg,#e2e8f0_0_2px,#f8fafc_2px_4px)] border border-slate-200" />
+            Ажлын бус цаг
           </span>
-          <button
-            onClick={() => { setSelectedId(null); setDraft(defaultDraft()); }}
-            disabled={columns.length === 0}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-semibold shadow-sm disabled:opacity-40 transition"
-          >
-            + Шинэ захиалга
-          </button>
         </div>
       </div>
 
@@ -315,18 +331,25 @@ export default function Scheduler({
                   {v.doctor ? <Avatar doctor={v.doctor} /> : (
                     <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-sm shrink-0">?</span>
                   )}
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-[13px] font-semibold text-slate-900 truncate">
                       {v.doctor?.name ?? 'Эмч оноогоогүй'}
                     </div>
                     <div className="text-[11px] text-slate-400 truncate">
                       {v.doctor
-                        ? v.hours ? `${v.hours.open}–${v.hours.close}` : 'Амарна'
+                        ? v.hours ? v.doctor.specialty || `${v.hours.open}–${v.hours.close}` : 'Амарна'
                         : 'Чат болон бусад'}
-                      {v.items.length > 0 && ` · ${v.items.length} захиалга`}
-                      {totalPrice(v.items) > 0 && ` · ${money(totalPrice(v.items))}`}
                     </div>
                   </div>
+                  {v.items.length > 0 && (
+                    // Утсан дээр багана нарийн — нэрийг нь таслахгүйн тулд нууна
+                    <div className="hidden sm:block shrink-0 text-right leading-tight tabular-nums">
+                      <div className="text-[11px] font-medium text-slate-500">{v.items.length} захиалга</div>
+                      {totalPrice(v.items) > 0 && (
+                        <div className="text-[11px] font-semibold text-emerald-700">{money(totalPrice(v.items))}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -419,7 +442,8 @@ export default function Scheduler({
                         <button
                           onClick={e => { e.stopPropagation(); setDraft(null); setSelectedId(a.id); }}
                           title={`${toHHMM(s)}–${toHHMM(s + a.duration_minutes)} · ${a.customer_name}${a.service ? ` · ${a.service}` : ''}${a.price != null ? ` · ${money(a.price)}` : ''}`}
-                          className={`w-full h-full rounded-md border-l-[3px] pl-2 py-0.5 text-left overflow-hidden shadow-sm hover:shadow-md transition ${checkable ? 'pr-7' : 'pr-2'} ${style.block} ${
+                          // flex-col: товч агуулгаа босоо голлуулдаг — урт захиалгын бичиг дээд талдаа байна
+                          className={`w-full h-full flex flex-col justify-start rounded-md border-l-[3px] pl-2 py-0.5 text-left overflow-hidden shadow-sm hover:shadow-md transition ${checkable ? 'pr-7' : 'pr-2'} ${style.block} ${
                             a.id === selectedId ? 'ring-2 ring-blue-500 ring-offset-1' : ''
                           } ${otherBranch || a.status === 'no_show' ? 'opacity-60' : ''}`}
                         >
@@ -456,9 +480,9 @@ export default function Scheduler({
                       );
                     })}
 
-                    {/* Одоогийн цаг */}
+                    {/* Одоогийн цаг — захиалгын доор: бичгийг нь дайрч зурахгүй */}
                     {isToday && nowMin >= startMin && nowMin <= endMin && (
-                      <div className="absolute inset-x-0 z-[6] pointer-events-none" style={{ top: y(nowMin) }}>
+                      <div className="absolute inset-x-0 z-[4] pointer-events-none" style={{ top: y(nowMin) }}>
                         <div className="h-0.5 bg-rose-500" />
                       </div>
                     )}
@@ -469,20 +493,6 @@ export default function Scheduler({
           </div>
         </div>
       )}
-
-      {/* Тайлбар */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-slate-500">
-        {(['pending', 'confirmed', 'completed', 'no_show'] as const).map(s => (
-          <span key={s} className="inline-flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-sm ${STATUS_STYLE[s].dot}`} />
-            {STATUS_STYLE[s].label}
-          </span>
-        ))}
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[repeating-linear-gradient(135deg,#e2e8f0_0_2px,#f8fafc_2px_4px)] border border-slate-200" />
-          Ажлын бус цаг
-        </span>
-      </div>
 
       {draft && (
         <NewAppointmentPanel
@@ -550,14 +560,28 @@ function OffHours({
   );
 }
 
+const AVATAR_COLORS = [
+  'bg-blue-100 text-blue-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-violet-100 text-violet-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-cyan-100 text-cyan-700',
+  'bg-indigo-100 text-indigo-700',
+];
+
 function Avatar({ doctor }: { doctor: CalDoctor }) {
   if (doctor.avatar_url) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={doctor.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />;
   }
+  // Эмч бүр тогтмол өөр өнгөтэй — багануудыг нүдээр ялгахад амар
+  const hash = [...doctor.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  // "Б. Энхжаргал" → "Э": овгийн үсэг биш, нэрийнх
+  const initial = (doctor.name.split(/\.\s*/).pop() || doctor.name).charAt(0);
   return (
-    <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[13px] font-semibold shrink-0">
-      {doctor.name.charAt(0)}
+    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${AVATAR_COLORS[hash % AVATAR_COLORS.length]}`}>
+      {initial}
     </span>
   );
 }
