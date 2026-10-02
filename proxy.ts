@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
+  // Public auth pages must stay accessible when Supabase is unavailable.
+  // getSession() can refresh expired tokens and retry network failures.
+  if (!request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -25,29 +31,15 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Энэ бол ЗӨВХӨН урьдчилсан шүүлтүүр (optimistic check) — cookie-г уншаад
-  // хурдан redirect хийхэд зориулагдсан. getSession() нь JWT-г баталгаажуулдаггүй
-  // тул үүнийг хамгаалалт гэж БҮҮ найд.
-  //
-  // Жинхэнэ шалгалт нь app/(dashboard)/layout.tsx дээр getCurrentUser()-ээр
-  // (getUser() → баталгаажуулсан) хийгддэг. Next.js өөрөө proxy дотор
-  // сүлжээний дуудлага хийхийг зөвлөдөггүй — prefetch хүсэлт бүр дээр
-  // ажилладаг тул удаашруулна.
+  // Refresh dashboard session cookies here, where response cookies are writable.
+  // getSession() is not authorization: the dashboard layout and server actions
+  // verify the user with getUser(). Refreshing an expired session needs network.
   const { data: { session } } = await supabase.auth.getSession();
   const user = session?.user ?? null;
-  const pathname = request.nextUrl.pathname;
-
-  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-  const isDashboard = pathname.startsWith('/dashboard');
 
   // Нэвтрээгүй + dashboard руу → login
-  if (!user && isDashboard) {
+  if (!user) {
     return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // Нэвтэрсэн + login/signup → dashboard
-  if (user && isAuthPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return response;
@@ -57,5 +49,5 @@ export async function proxy(request: NextRequest) {
 // (/c/[slug]) болон api route-ууд redirect логикт огт хамаардаггүй тул
 // тэднийг дэмий боловсруулахгүй.
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/signup'],
+  matcher: ['/dashboard/:path*'],
 };
